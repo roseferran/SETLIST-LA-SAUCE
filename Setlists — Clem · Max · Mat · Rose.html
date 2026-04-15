@@ -155,6 +155,10 @@ main{max-width:960px;margin:0 auto;padding:2rem}
 .pips{display:flex;gap:2px}
 .pip{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;border:1.5px solid #ddd;background:#F1EFE8;color:#aaa;flex-shrink:0;transition:all .2s}
 .pip.on{border-color:transparent;color:#fff}
+.hbtn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;flex-shrink:0}
+.hbtn:hover{border-color:#E24B4A;background:#FCEBEB}
+.hbtn.hearted{background:#FCEBEB;border-color:#E24B4A}
+.hcount{font-size:11px;color:var(--muted);min-width:12px;text-align:left}
 .delbtn{width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--faint);padding:0;flex-shrink:0;margin-left:2px;transition:all .15s}
 .delbtn:hover{border-color:var(--red);color:var(--red);background:#FCEBEB}
 
@@ -252,6 +256,36 @@ footer p{font-size:11px;color:var(--faint)}
     <div class="fa">
       <button class="btn" onclick="closeAdd()">Annuler</button>
       <button class="btn pri" onclick="submitTrack()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITION -->
+<div class="ov" id="edit-ov" style="display:none">
+  <div class="box">
+    <h2>Modifier le morceau</h2>
+    <p class="sub" id="edit-hint"></p>
+    <div class="fg">
+      <div class="fr"><label class="lbl">Titre *</label><input class="inp" id="e-title" type="text" autocomplete="off"></div>
+      <div class="fr"><label class="lbl">Artiste *</label><input class="inp" id="e-artist" type="text" autocomplete="off"></div>
+    </div>
+    <div class="fg">
+      <div class="fr"><label class="lbl">Durée</label><input class="inp" id="e-dur" type="text" maxlength="8"></div>
+      <div class="fr"><label class="lbl">Style</label>
+        <select class="sel" id="e-style">
+          <option value="pop">Pop</option><option value="rock">Rock / New Wave</option>
+          <option value="rnb">R&B / Soul / Funk</option><option value="electro">Électro / Dance</option>
+          <option value="disco">Disco / Funk vintage</option><option value="hiphop">Hip-hop / Rap</option>
+          <option value="variete">Variété FR</option><option value="latin">Latin / Reggaeton</option>
+          <option value="medley">Medley</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr"><label class="lbl">Note</label><input class="inp" id="e-note" type="text" placeholder="Optionnel..." autocomplete="off"></div>
+    <p class="err" id="e-err">Titre et artiste sont obligatoires</p>
+    <div class="fa">
+      <button class="btn" onclick="closeEdit()">Annuler</button>
+      <button class="btn pri" onclick="saveEdit()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -514,7 +548,7 @@ function setKeyFor(n){ const c=CORE.find(c=>c.name===n); return c?c.set:n.toLowe
 function setLabel(k){ const c=CORE.find(c=>c.set===k); return c?'Côté '+c.name:'Côté '+k.charAt(0).toUpperCase()+k.slice(1); }
 
 // ── STATE ────────────────────────────────────────────────────
-let fbVotes={}, fbCustom={}, fbMembers={}, fbParts={};
+let fbVotes={}, fbCustom={}, fbMembers={}, fbParts={}, fbHearts={}, fbOverrides={};
 let me = null;          // {name, initials, color, set}
 let curTab = 'all';
 let curStyle = 'all';
@@ -522,7 +556,10 @@ let showExcl = false;
 let curPartId = null;
 let pickedColor = PALETTE[0];
 
-function allTracks(){ return [...BASE, ...Object.values(fbCustom)]; }
+function allTracks(){
+  const base = BASE.map(tr => fbOverrides[tr.id] ? {...tr, ...fbOverrides[tr.id]} : tr);
+  return [...base, ...Object.values(fbCustom)];
+}
 function isExcl(tr){ return Object.keys(fbVotes[tr.id]||{}).length >= 4; }
 function getVoters(id){ return Object.keys(fbVotes[id]||{}); }
 
@@ -716,6 +753,60 @@ window.submitTrack = async function(){
   rebuild();
 };
 
+// ── EDIT TRACK ─────────────────────────────────────────────
+let curEditId = null;
+
+window.openEdit = function(id){
+  if(!me){ openMo(); return; }
+  const tr = allTracks().find(t => t.id === id);
+  if(!tr) return;
+  curEditId = id;
+  document.getElementById('edit-hint').textContent = 'Ajouté par ' + (tr.addedBy || '?');
+  document.getElementById('e-title').value  = tr.t || '';
+  document.getElementById('e-artist').value = tr.a || '';
+  document.getElementById('e-dur').value    = tr.d || '';
+  document.getElementById('e-note').value   = tr.n || '';
+  document.getElementById('e-style').value  = tr.s || 'pop';
+  document.getElementById('e-err').style.display = 'none';
+  document.getElementById('edit-ov').style.display = 'flex';
+  setTimeout(() => document.getElementById('e-title').focus(), 100);
+};
+
+window.closeEdit = function(){ document.getElementById('edit-ov').style.display='none'; curEditId=null; };
+
+document.getElementById('edit-ov').addEventListener('click', e => {
+  if(e.target === document.getElementById('edit-ov')) closeEdit();
+});
+
+window.saveEdit = async function(){
+  const t = document.getElementById('e-title').value.trim();
+  const a = document.getElementById('e-artist').value.trim();
+  if(!t||!a){ document.getElementById('e-err').style.display='block'; return; }
+  document.getElementById('e-err').style.display = 'none';
+  const existing = fbCustom[curEditId];
+  const baseTrack = BASE.find(tr=>tr.id===curEditId);
+  if(existing) {
+    // Titre custom — on met à jour directement
+    await set(ref(db,'custom/'+curEditId), {
+      ...existing,
+      t, a,
+      d: document.getElementById('e-dur').value.trim() || '?:??',
+      s: document.getElementById('e-style').value,
+      n: document.getElementById('e-note').value.trim() || null,
+    });
+  } else if(baseTrack) {
+    // Titre de base — on crée une entrée custom qui override le base
+    await set(ref(db,'overrides/'+curEditId), {
+      t, a,
+      d: document.getElementById('e-dur').value.trim() || baseTrack.d,
+      s: document.getElementById('e-style').value,
+      n: document.getElementById('e-note').value.trim() || null,
+    });
+  }
+  closeEdit();
+  rebuild();
+};
+
 // ── PARTITION ────────────────────────────────────────────────
 async function openPart(tr){
   curPartId = tr.id;
@@ -775,6 +866,11 @@ async function toggleVote(id){
   if(!me){ openMo(); return; }
   await runTransaction(ref(db,'votes/'+id+'/'+fbk(me.name)), cur => cur?null:true);
 }
+
+async function toggleHeart(id){
+  if(!me){ openMo(); return; }
+  await runTransaction(ref(db,'hearts/'+id+'/'+fbk(me.name)), cur => cur?null:true);
+}
 async function delCustom(id){
   if(!confirm('Supprimer ce titre ?')) return;
   await remove(ref(db,'custom/'+id));
@@ -795,12 +891,20 @@ function mkVoteRow(tr){
     return '<span class="pip'+(on?' on':'')+'"'+(on?' style="background:'+col+';border-color:'+col+'"':'')+' title="'+(m?m.name:k)+'">'+ini+'</span>';
   }).join('');
   const hasData = fbParts[tr.id] && Object.values(fbParts[tr.id]).some(v=>v&&typeof v==='string'&&v.length>0);
+  const isAdminUser = me && CORE.find(x=>x.name===me.name);
+  const editBtn = isAdminUser ? '<button class="delbtn" data-edit="'+tr.id+'" title="Modifier" style="margin-right:2px">✏️</button>' : '';
   const del = tr.custom ? '<button class="delbtn" data-del="'+tr.id+'">✕</button>' : '';
+  // Hearts
+  const heartVoters = Object.keys(fbHearts[tr.id]||{});
+  const hearted = myK && heartVoters.includes(myK);
+  const heartCount = heartVoters.length;
   return '<div class="vrow">'
     +'<button class="pbtn'+(hasData?' has-data':'')+'" data-part="'+tr.id+'" title="Partition / Accords">📄</button>'
+    +'<button class="hbtn'+(hearted?' hearted':'')+'" data-heart="'+tr.id+'" title="Coup de cœur">❤️</button>'
+    +(heartCount>0?'<span class="hcount">'+heartCount+'</span>':'')
     +'<button class="vbtn'+(voted?' voted':'')+'" data-vote="'+tr.id+'">✕</button>'
     +'<div class="pips">'+pips+'</div>'
-    +del+'</div>';
+    +editBtn+del+'</div>';
 }
 
 // ── TABS ─────────────────────────────────────────────────────
@@ -893,7 +997,8 @@ function buildNew(){
     const card = document.createElement('div');
     card.className = 'ncard';
     const when = tr.addedAt ? ' · '+new Date(tr.addedAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
-    const canDel = me && me.name===tr.addedBy;
+    const isAdmin = me && CORE.find(c=>c.name===me.name);
+    const canDel = me && (me.name===tr.addedBy || isAdmin);
     card.innerHTML =
       '<div class="ncard-head">'
         +'<div style="width:32px;height:32px;border-radius:50%;background:'+(tr.addedColor||'#1D9E75')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+(tr.addedInitials||'?')+'</div>'
@@ -908,6 +1013,8 @@ function buildNew(){
       +'<div class="ncard-by">Ajouté par '+(tr.addedBy||'?')+when+'</div>'
       +'<div class="ncard-actions">'
         +'<button class="btn sm" data-part="'+tr.id+'">📄 Partition</button>'
+        +'<button class="btn sm'+(Object.keys(fbHearts[tr.id]||{}).includes(myK||'_')?' hearted':'')+'" data-heart="'+tr.id+'">❤️ '+(Object.keys(fbHearts[tr.id]||{}).length||'')+' Coup de cœur</button>'
+        +(canDel?'<button class="btn sm" data-edit="'+tr.id+'">✏️ Modifier</button>':'')
         +(canDel?'<button class="btn sm danger" data-del="'+tr.id+'">Supprimer</button>':'')
       +'</div>';
     main.appendChild(card);
@@ -917,6 +1024,8 @@ function buildNew(){
     const tr=allTracks().find(t=>t.id===b.dataset.part);
     if(tr) openPart(tr);
   }));
+  main.querySelectorAll('[data-heart]').forEach(b=>b.addEventListener('click',()=>toggleHeart(b.dataset.heart)));
+  main.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>openEdit(b.dataset.edit)));
   main.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>delCustom(b.dataset.del)));
 }
 
@@ -991,6 +1100,8 @@ function buildSetlists(){
 
   // Wire up events
   main.querySelectorAll('[data-vote]').forEach(b=>b.addEventListener('click',()=>toggleVote(b.dataset.vote)));
+  main.querySelectorAll('[data-heart]').forEach(b=>b.addEventListener('click',()=>toggleHeart(b.dataset.heart)));
+  main.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>openEdit(b.dataset.edit)));
   main.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>delCustom(b.dataset.del)));
   main.querySelectorAll('[data-part]').forEach(b=>b.addEventListener('click',()=>{
     const tr=allTracks().find(t=>t.id===b.dataset.part);
@@ -1012,12 +1123,15 @@ onValue(ref(db,'votes'),      snap=>{ fbVotes   = snap.val()||{}; syncEl.classNa
 onValue(ref(db,'custom'),     snap=>{ fbCustom  = snap.val()||{}; rebuild(); });
 onValue(ref(db,'members'),    snap=>{ fbMembers = snap.val()||{}; rebuild(); });
 onValue(ref(db,'partitions'), snap=>{ fbParts   = snap.val()||{}; rebuild(); });
+onValue(ref(db,'hearts'),     snap=>{ fbHearts   = snap.val()||{}; rebuild(); });
+onValue(ref(db,'overrides'),  snap=>{ fbOverrides = snap.val()||{}; rebuild(); });
 
 // ── ESC ───────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if(e.key!=='Escape') return;
   document.getElementById('mo-ov').style.display   = 'none';
   document.getElementById('add-ov').style.display  = 'none';
+  document.getElementById('edit-ov').style.display = 'none';
   document.getElementById('part-ov').style.display = 'none';
 });
 
