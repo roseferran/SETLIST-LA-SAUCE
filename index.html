@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Setlists — La Sauce</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -112,7 +114,7 @@ main{max-width:960px;margin:0 auto;padding:2rem}
 .ncard-artist{font-size:12px;color:var(--muted)}
 .ncard-meta{display:flex;gap:8px;align-items:center;margin-top:5px;flex-wrap:wrap}
 .ncard-by{font-size:11px;color:var(--faint);margin-top:4px}
-.ncard-actions{display:flex;gap:6px;margin-top:8px}
+.ncard-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center}
 
 /* SETLIST */
 .sblock{margin-bottom:3rem}
@@ -142,6 +144,9 @@ main{max-width:960px;margin:0 auto;padding:2rem}
 .tnote{font-size:11px;color:var(--faint);font-style:italic;margin-top:1px}
 .tdur{font-size:12px;color:var(--muted);white-space:nowrap}
 .pill{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.pill-select{font-size:10px;font-weight:600;padding:2px 18px 2px 8px;border-radius:99px;white-space:nowrap;border:1px solid transparent;cursor:pointer;font-family:'DM Sans',sans-serif;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'><path fill='currentColor' d='M0 0l4 6 4-6z'/></svg>");background-repeat:no-repeat;background-position:right 5px center;transition:filter .15s,box-shadow .15s}
+.pill-select:hover{filter:brightness(.93)}
+.pill-select:focus{outline:none;box-shadow:0 0 0 2px var(--ink)}
 .mtag{display:inline-block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;background:var(--ink);color:var(--cream);padding:1px 6px;border-radius:3px;margin-right:4px;vertical-align:middle}
 .ntag{display:inline-block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;padding:1px 6px;border-radius:3px;margin-right:4px;vertical-align:middle}
 
@@ -158,6 +163,8 @@ main{max-width:960px;margin:0 auto;padding:2rem}
 .hbtn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;flex-shrink:0}
 .hbtn:hover{border-color:#E24B4A;background:#FCEBEB}
 .hbtn.hearted{background:#FCEBEB;border-color:#E24B4A}
+.hpips{display:flex;gap:2px;margin-left:1px}
+.hpip{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;flex-shrink:0;transition:all .2s;box-shadow:0 0 0 1.5px #fff}
 .hcount{font-size:11px;color:var(--muted);min-width:12px;text-align:left}
 .delbtn{width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--faint);padding:0;flex-shrink:0;margin-left:2px;transition:all .15s}
 .delbtn:hover{border-color:var(--red);color:var(--red);background:#FCEBEB}
@@ -167,10 +174,91 @@ main{max-width:960px;margin:0 auto;padding:2rem}
 .part-link:hover{border-color:var(--ink);background:var(--ink);color:var(--cream)}
 .pblock{margin-bottom:1rem}
 .pblock label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px}
+.clear-sect{margin-left:auto;border:1px solid var(--border);background:#fff;cursor:pointer;color:var(--faint);font-size:9px;font-weight:700;padding:0;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s;opacity:.5;font-family:'DM Sans',sans-serif}
+.pblock:hover .clear-sect{opacity:1}
+.clear-sect:hover{border-color:var(--red);color:var(--red);background:#FCEBEB;opacity:1}
+
+/* AUDIO MAQUETTE */
+.audio-block{background:#FBEAF0;border:1px solid #F5D0DE;border-radius:10px;padding:12px 14px}
+.audio-block label{color:#72243E}
+.audio-player{width:100%;margin:4px 0;border-radius:6px}
+.audio-meta{font-size:11px;color:#93465F;margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.audio-name{font-weight:500;color:#72243E;font-size:12px;word-break:break-word;max-width:100%}
+.audio-empty{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.audio-url-inp{flex:1;min-width:200px;font-size:12px;padding:8px 10px}
+.audio-up-btn{padding:8px 14px;border-radius:8px;border:1.5px solid #D4537E;background:#fff;color:#72243E;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.audio-up-btn:hover{background:#D4537E;color:#fff}
+.audio-help{flex-basis:100%;margin:4px 0 0;font-size:11px;color:#93465F;font-style:italic;line-height:1.4}
+.audio-original{font-size:10px;margin:6px 0 0;text-align:right;opacity:.7}
+.audio-original a{color:#93465F;text-decoration:underline}
+.audio-del-btn{padding:4px 10px;border-radius:99px;border:1px solid #F5D0DE;background:#fff;color:#A32D2D;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;margin-left:auto}
+.audio-del-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
 .save-row{display:flex;align-items:center;gap:10px;margin-top:1.25rem;flex-wrap:wrap}
 .sav-ok{font-size:12px;color:var(--green)}
 .sav-err{font-size:12px;color:var(--red)}
 .upd{font-size:11px;color:var(--faint)}
+.pdf-btn{padding:8px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--ink);transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.pdf-btn:hover{border-color:var(--ink);background:var(--ink);color:var(--cream)}
+
+/* CONCERTS */
+.concert-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1.5px solid var(--ink);flex-wrap:wrap}
+.concert-head h2{font-family:'DM Serif Display',serif;font-size:1.5rem;letter-spacing:-.01em}
+.concert-head p{font-size:12px;color:var(--muted);margin-top:2px}
+.ccard{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:12px;transition:border-color .15s,transform .15s}
+.ccard:hover{border-color:var(--ink)}
+.ccard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:4px}
+.ccard-name{font-family:'DM Serif Display',serif;font-size:1.25rem;line-height:1.2;letter-spacing:-.01em}
+.ccard-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.ccard-stats{display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);font-size:12px;color:var(--muted);flex-wrap:wrap}
+.ccard-stats strong{color:var(--ink);font-weight:600}
+.ccard-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.ccard-date{font-family:'DM Serif Display',serif;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:3px 10px;border:1px solid var(--border);border-radius:99px;background:var(--cream);white-space:nowrap;flex-shrink:0}
+
+/* CONCERT DETAIL */
+.cd-empty{padding:2rem 0;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:10px;background:#fff}
+.cd-list{border:1px solid var(--border);border-radius:10px;background:#fff;overflow:hidden}
+.cd-item{display:grid;grid-template-columns:20px 44px 1fr auto auto auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);transition:background .1s}
+.cd-item:last-child{border-bottom:none}
+.cd-item:hover{background:var(--cream)}
+.cd-drag{cursor:grab;color:var(--faint);font-size:15px;padding:0;user-select:none;line-height:1;text-align:center;letter-spacing:-1px;font-weight:700;transition:color .15s}
+.cd-drag:hover{color:var(--ink)}
+.cd-drag:active{cursor:grabbing}
+.cd-num-input{width:44px;padding:5px 4px;border:1px solid var(--border);border-radius:6px;text-align:center;font-family:'DM Serif Display',serif;font-size:1.1rem;background:#fff;color:var(--ink);-moz-appearance:textfield;transition:border-color .15s}
+.cd-num-input:focus{border-color:var(--ink);outline:none;background:var(--cream)}
+.cd-num-input::-webkit-inner-spin-button,.cd-num-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.cd-info{min-width:0}
+.cd-tt{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd-ta{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd-dur{font-size:12px;color:var(--muted);white-space:nowrap}
+.cd-rm{width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--faint);padding:0;flex-shrink:0;transition:all .15s}
+.cd-rm:hover{border-color:var(--red);color:var(--red);background:#FCEBEB}
+.cd-total{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--cream);border:1px solid var(--border);border-radius:10px;margin-top:12px;font-size:13px}
+.cd-total strong{font-family:'DM Serif Display',serif;font-size:1.1rem}
+.sortable-ghost{opacity:.4;background:#E1F5EE !important}
+.sortable-chosen{background:#fff !important}
+.sortable-drag{background:#fff !important;box-shadow:0 8px 24px rgba(0,0,0,.18);border-radius:8px}
+
+/* Concert card delete button */
+.ccard-top-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.ccard-del{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;color:var(--muted);flex-shrink:0;transition:all .15s;display:flex;align-items:center;justify-content:center;padding:0}
+.ccard-del:hover{border-color:var(--red);color:var(--red);background:#FCEBEB}
+
+/* TRACK PICKER */
+.picker-top{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.picker-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.picker-list{max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:#fff}
+.picker-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.picker-item:last-child{border-bottom:none}
+.picker-item:hover{background:var(--cream)}
+.picker-item.sel{background:#E1F5EE}
+.picker-item.already{opacity:.4;background:var(--cream)}
+.picker-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--ink);cursor:pointer;flex-shrink:0}
+.picker-item-info{min-width:0;flex:1}
+.picker-item-t{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.picker-item-a{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.picker-item-d{font-size:11px;color:var(--muted);white-space:nowrap}
+.picker-count{font-size:12px;color:var(--muted);margin-top:8px;text-align:right}
+.picker-empty{padding:2rem 1rem;text-align:center;color:var(--muted);font-size:13px}
 
 /* FOOTER */
 footer{max-width:960px;margin:0 auto;padding:1.5rem 2rem 3rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
@@ -182,10 +270,12 @@ footer p{font-size:11px;color:var(--faint)}
 @media(max-width:640px){
   header,.tabs,.filters,main,footer,.idbar{padding-left:1.25rem;padding-right:1.25rem}
   .trow{grid-template-columns:18px 1fr auto auto}
-  .trow .pill{display:none}
+  .trow .pill, .trow .pill-select{display:none}
   .pips{display:none}
   .stat-n{font-size:1.4rem}
   .fg{grid-template-columns:1fr}
+  .cd-item{grid-template-columns:16px 40px 1fr auto auto}
+  .cd-item .pill{display:none}
 }
 </style>
 </head>
@@ -199,11 +289,9 @@ footer p{font-size:11px;color:var(--faint)}
     <h2>Qui es-tu ?</h2>
     <p class="sub">Choisis ton profil ou crée-en un nouveau</p>
 
-    <!-- Admins -->
     <span class="slbl">Membres principaux</span>
     <div class="mgrid" id="mo-admins"></div>
 
-    <!-- Invités -->
     <div id="mo-guests-wrap" style="display:none">
       <span class="slbl">Invités</span>
       <div id="mo-guests"></div>
@@ -211,7 +299,6 @@ footer p{font-size:11px;color:var(--faint)}
 
     <hr class="div">
 
-    <!-- Nouveau profil -->
     <span class="slbl">Nouveau profil</span>
     <div class="fr">
       <label class="lbl" for="id-name">Prénom ou initiales</label>
@@ -238,20 +325,14 @@ footer p{font-size:11px;color:var(--faint)}
     </div>
     <div class="fg">
       <div class="fr"><label class="lbl">Durée</label><input class="inp" id="f-dur" type="text" placeholder="ex: 3:50" maxlength="8"></div>
-      <div class="fr"><label class="lbl">Setlist</label><select class="sel" id="f-set"></select></div>
-    </div>
-    <div class="fg">
       <div class="fr"><label class="lbl">Style</label>
-        <select class="sel" id="f-style">
-          <option value="pop">Pop</option><option value="rock">Rock / New Wave</option>
-          <option value="rnb">R&B / Soul / Funk</option><option value="electro">Électro / Dance</option>
-          <option value="disco">Disco / Funk vintage</option><option value="hiphop">Hip-hop / Rap</option>
-          <option value="variete">Variété FR</option><option value="latin">Latin / Reggaeton</option>
-          <option value="medley">Medley</option>
-        </select>
+        <div style="display:flex;gap:6px">
+          <select class="sel" id="f-style" style="flex:1"></select>
+          <button type="button" class="btn sm" onclick="openGenreModal('f-style')" title="Créer un nouveau genre" style="padding:0 12px;font-size:16px;font-weight:700">+</button>
+        </div>
       </div>
-      <div class="fr"><label class="lbl">Note</label><input class="inp" id="f-note" type="text" placeholder="Optionnel..." autocomplete="off"></div>
     </div>
+    <div class="fr"><label class="lbl">Note</label><input class="inp" id="f-note" type="text" placeholder="Optionnel..." autocomplete="off"></div>
     <p class="err" id="f-err">Titre et artiste sont obligatoires</p>
     <div class="fa">
       <button class="btn" onclick="closeAdd()">Annuler</button>
@@ -272,13 +353,10 @@ footer p{font-size:11px;color:var(--faint)}
     <div class="fg">
       <div class="fr"><label class="lbl">Durée</label><input class="inp" id="e-dur" type="text" maxlength="8"></div>
       <div class="fr"><label class="lbl">Style</label>
-        <select class="sel" id="e-style">
-          <option value="pop">Pop</option><option value="rock">Rock / New Wave</option>
-          <option value="rnb">R&B / Soul / Funk</option><option value="electro">Électro / Dance</option>
-          <option value="disco">Disco / Funk vintage</option><option value="hiphop">Hip-hop / Rap</option>
-          <option value="variete">Variété FR</option><option value="latin">Latin / Reggaeton</option>
-          <option value="medley">Medley</option>
-        </select>
+        <div style="display:flex;gap:6px">
+          <select class="sel" id="e-style" style="flex:1"></select>
+          <button type="button" class="btn sm" onclick="openGenreModal('e-style')" title="Créer un nouveau genre" style="padding:0 12px;font-size:16px;font-weight:700">+</button>
+        </div>
       </div>
     </div>
     <div class="fr"><label class="lbl">Note</label><input class="inp" id="e-note" type="text" placeholder="Optionnel..." autocomplete="off"></div>
@@ -295,17 +373,104 @@ footer p{font-size:11px;color:var(--faint)}
   <div class="box wide">
     <h2 id="pt-title"></h2>
     <p class="sub" id="pt-artist"></p>
-    <div id="pt-lyrics-wrap"></div>
-    <div class="pblock"><label>🎸 Guitare</label><textarea class="ta" id="pa-guitar" placeholder="Accords guitare, tonalité, capo..."></textarea></div>
-    <div class="pblock"><label>🎸 Basse</label><textarea class="ta" id="pa-bass" placeholder="Accords basse, root notes, groove..."></textarea></div>
-    <div class="pblock"><label>🎹 Clavier</label><textarea class="ta" id="pa-keys" placeholder="Accords clavier, voicings, nappes..."></textarea></div>
-    <div class="pblock"><label>🥁 Batterie</label><textarea class="ta" id="pa-drums" placeholder="Structure, tempo, groove..."></textarea></div>
-    <div class="pblock"><label>📝 Notes libres</label><textarea class="ta" id="pa-notes" placeholder="Arrangements, idées..."></textarea></div>
+    <div id="pt-lyrics-link"></div>
+
+    <div class="pblock audio-block">
+      <label>🎧 Maquette audio</label>
+      <div id="pt-audio-content"></div>
+    </div>
+
+    <div class="pblock"><label>📖 Paroles<button class="clear-sect" data-clear="lyrics" title="Effacer cette section">✕</button></label><textarea class="ta" id="pa-lyrics" placeholder="Colle les paroles ici pour qu'elles soient incluses dans le PDF téléchargé..." style="min-height:120px"></textarea></div>
+    <div class="pblock"><label>🎸 Guitare<button class="clear-sect" data-clear="guitar" title="Effacer cette section">✕</button></label><textarea class="ta" id="pa-guitar" placeholder="Accords guitare, tonalité, capo..."></textarea></div>
+    <div class="pblock"><label>🎸 Basse<button class="clear-sect" data-clear="bass" title="Effacer cette section">✕</button></label><textarea class="ta" id="pa-bass" placeholder="Accords basse, root notes, groove..."></textarea></div>
+    <div class="pblock"><label>🎹 Clavier<button class="clear-sect" data-clear="keys" title="Effacer cette section">✕</button></label><textarea class="ta" id="pa-keys" placeholder="Accords clavier, voicings, nappes..."></textarea></div>
+    <div class="pblock"><label>🥁 Batterie<button class="clear-sect" data-clear="drums" title="Effacer cette section">✕</button></label><textarea class="ta" id="pa-drums" placeholder="Structure, tempo, groove..."></textarea></div>
+    <div class="pblock"><label>📝 Notes libres<button class="clear-sect" data-clear="notes" title="Effacer cette section">✕</button></label><textarea class="ta" id="pa-notes" placeholder="Arrangements, idées..."></textarea></div>
     <div class="save-row">
       <button class="btn pri" style="flex:none;padding:10px 22px" onclick="savePart()">Sauvegarder</button>
+      <button class="pdf-btn" onclick="exportPartitionPDF()">📥 Télécharger le PDF</button>
       <span id="pt-status"></span>
       <span class="upd" id="pt-upd"></span>
       <button class="btn" style="margin-left:auto" onclick="closePart()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CREATE GENRE -->
+<div class="ov" id="genre-ov" style="display:none">
+  <div class="box">
+    <h2>Nouveau genre</h2>
+    <p class="sub">Crée un genre musical, visible par tout le groupe</p>
+    <div class="fr">
+      <label class="lbl" for="g-name">Nom du genre *</label>
+      <input class="inp" id="g-name" type="text" placeholder="ex: Jazz, Reggae, Country..." maxlength="40" autocomplete="off">
+    </div>
+    <div class="fr">
+      <label class="lbl">Couleur</label>
+      <div class="swatches" id="g-colors"></div>
+    </div>
+    <div class="fr">
+      <label class="lbl">Aperçu</label>
+      <div id="g-preview" style="padding:8px 0"></div>
+    </div>
+    <p class="err" id="g-err">Le nom est obligatoire</p>
+    <div class="fa">
+      <button class="btn" onclick="closeGenreModal()">Annuler</button>
+      <button class="btn pri" onclick="saveNewGenre()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONCERT (create/edit) -->
+<div class="ov" id="concert-ov" style="display:none">
+  <div class="box">
+    <h2 id="concert-modal-title">Nouveau concert</h2>
+    <p class="sub">Crée une setlist spécifique à un concert</p>
+    <div class="fr"><label class="lbl">Nom du concert *</label><input class="inp" id="c-name" type="text" placeholder="ex: Bal du 14 juillet" autocomplete="off"></div>
+    <div class="fg">
+      <div class="fr"><label class="lbl">Date</label><input class="inp" id="c-date" type="date"></div>
+      <div class="fr"><label class="lbl">Lieu</label><input class="inp" id="c-venue" type="text" placeholder="ex: Paris, Le Petit Bain" autocomplete="off"></div>
+    </div>
+    <p class="err" id="c-err">Le nom du concert est obligatoire</p>
+    <div class="fa">
+      <button class="btn" onclick="closeConcertModal()">Annuler</button>
+      <button class="btn pri" onclick="saveConcert()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONCERT DETAIL -->
+<div class="ov" id="cdetail-ov" style="display:none">
+  <div class="box wide">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:1rem">
+      <div>
+        <h2 id="cd-name"></h2>
+        <p class="sub" id="cd-meta" style="margin-bottom:0"></p>
+      </div>
+      <button class="btn" onclick="closeCdetail()" style="padding:6px 12px">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+      <button class="btn" id="cd-add-btn" onclick="openTrackPicker()">+ Ajouter des titres</button>
+      <button class="pdf-btn" onclick="exportConcertPDF()">📥 Télécharger le PDF</button>
+      <button class="btn" id="cd-edit-btn" onclick="openEditConcert()" style="margin-left:auto">✏️ Modifier</button>
+      <button class="btn danger" id="cd-del-btn" onclick="deleteConcert()">Supprimer</button>
+    </div>
+    <div id="cd-tracks"></div>
+  </div>
+</div>
+
+<!-- MODAL TRACK PICKER -->
+<div class="ov" id="picker-ov" style="display:none">
+  <div class="box wide">
+    <h2>Ajouter des titres au concert</h2>
+    <p class="sub">Coche les titres à ajouter, ils seront placés à la fin de la setlist</p>
+    <input class="inp" id="picker-search" placeholder="🔍 Rechercher un titre ou un artiste..." style="margin-bottom:10px" autocomplete="off">
+    <div class="picker-filters" id="picker-filters"></div>
+    <div class="picker-list" id="picker-list"></div>
+    <p class="picker-count" id="picker-count"></p>
+    <div class="fa">
+      <button class="btn" onclick="closePicker()">Annuler</button>
+      <button class="btn pri" onclick="addPickedTracks()">Ajouter la sélection</button>
     </div>
   </div>
 </div>
@@ -328,13 +493,13 @@ footer p{font-size:11px;color:var(--faint)}
 <main id="main"></main>
 
 <footer>
-  <p>✕ Vote pour exclure · 4 votes = retiré · 📄 Partition/accords · ✦ ajouté par le groupe</p>
+  <p>✕ Vote pour exclure · 4 votes = retiré · 📄 Partition/accords · ❤️ Coup de cœur · ✦ ajouté par le groupe · 🎤 Concerts · 🗑️ voir les exclus</p>
   <div class="legend" id="legend"></div>
 </footer>
 
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, remove, onValue, runTransaction }
+import { getDatabase, ref, set, remove, onValue, runTransaction, update }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // ── FIREBASE ────────────────────────────────────────────────
@@ -352,6 +517,11 @@ const db = getDatabase(app);
 // ── CONSTANTS ────────────────────────────────────────────────
 const PALETTE = ['#E24B4A','#D85A30','#BA7517','#639922','#1D9E75','#185FA5','#534AB7','#993556','#444441','#D4537E'];
 
+const GENRE_PALETTE = [
+  '#7B2CBF','#00A8D8','#E0A41A','#E6437C','#149967','#C22131',
+  '#E8731E','#2C55B8','#7CAB28','#BD3E74','#2C7A7B','#5A3E2B'
+];
+
 const CORE = [
   {name:'Clem', initials:'C',  color:'#D4537E', set:'clem'},
   {name:'Max',  initials:'MX', color:'#534AB7', set:'max'},
@@ -359,17 +529,19 @@ const CORE = [
   {name:'Rose', initials:'R',  color:'#E24B4A', set:'rose'},
 ];
 
-const STYLES = {
-  medley: {label:'Medley',          color:'#534AB7', bg:'#EEEDFE', tc:'#26215C'},
-  electro:{label:'Électro / Dance', color:'#7F77DD', bg:'#EEEDFE', tc:'#3C3489'},
-  disco:  {label:'Disco / Funk',    color:'#888780', bg:'#F1EFE8', tc:'#444441'},
-  pop:    {label:'Pop',             color:'#D4537E', bg:'#FBEAF0', tc:'#72243E'},
-  rnb:    {label:'R&B / Soul',      color:'#1D9E75', bg:'#E1F5EE', tc:'#085041'},
-  rock:   {label:'Rock / New Wave', color:'#378ADD', bg:'#E6F1FB', tc:'#0C447C'},
-  hiphop: {label:'Hip-hop / Rap',   color:'#BA7517', bg:'#FAEEDA', tc:'#633806'},
-  variete:{label:'Variété FR',      color:'#D85A30', bg:'#FAECE7', tc:'#712B13'},
-  latin:  {label:'Latin',           color:'#639922', bg:'#EAF3DE', tc:'#27500A'},
+const BUILTIN_STYLES = {
+  medley: {label:'Medley',          color:'#7B2CBF', bg:'#F0E3FB', tc:'#3E155E'},
+  electro:{label:'Électro / Dance', color:'#00A8D8', bg:'#D6F0F9', tc:'#004A5E'},
+  disco:  {label:'Disco / Funk',    color:'#E0A41A', bg:'#FBEFD0', tc:'#5C420A'},
+  pop:    {label:'Pop',             color:'#E6437C', bg:'#FBDEEB', tc:'#781E44'},
+  rnb:    {label:'R&B / Soul',      color:'#149967', bg:'#D5F0E3', tc:'#08523A'},
+  rock:   {label:'Rock / New Wave', color:'#C22131', bg:'#FBDCE0', tc:'#6B121B'},
+  hiphop: {label:'Hip-hop / Rap',   color:'#E8731E', bg:'#FCE4D1', tc:'#7A3608'},
+  variete:{label:'Variété FR',      color:'#2C55B8', bg:'#DCE5F5', tc:'#122B6E'},
+  latin:  {label:'Latino',          color:'#7CAB28', bg:'#E7F2D1', tc:'#38520F'},
 };
+
+let STYLES = {...BUILTIN_STYLES};
 
 const LYRICS = {
   "Oops! I Did It Again":"https://genius.com/Britney-spears-oops-i-did-it-again-lyrics",
@@ -540,21 +712,95 @@ const BASE = [
 BASE.forEach((tr,i) => { tr.id = 'base_' + i; tr.custom = false; });
 
 // ── HELPERS ─────────────────────────────────────────────────
-function pd(d){ const m=d.match(/^(\d+):(\d+)/); return m ? +m[1]*60 + +m[2] : 300; }
+function pd(d){ const m=(d||'').match(/^(\d+):(\d+)/); return m ? +m[1]*60 + +m[2] : 300; }
 function fs(s){ const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); return h?h+'h'+String(m).padStart(2,'0'):m+'min'+String(s%60).padStart(2,'0'); }
 function fl(s){ const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); return h?h+'h '+m+'min':m+' min'; }
 function fbk(n){ return n.replace(/[.#$\/\[\]]/g,'_'); }
 function setKeyFor(n){ const c=CORE.find(c=>c.name===n); return c?c.set:n.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12)||'invite'; }
 function setLabel(k){ const c=CORE.find(c=>c.set===k); return c?'Côté '+c.name:'Côté '+k.charAt(0).toUpperCase()+k.slice(1); }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function isAdmin(){ return me && CORE.find(c=>c.name===me.name); }
+function sanitizeFilename(s){ return (s||'sans_nom').replace(/[^a-z0-9_-]/gi,'_').replace(/_+/g,'_').slice(0,60); }
+
+// Color helpers for deriving bg/tc tints from a main color
+function mixWithWhite(hex, ratio){
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  const nr = Math.round(r + (255 - r) * ratio);
+  const ng = Math.round(g + (255 - g) * ratio);
+  const nb = Math.round(b + (255 - b) * ratio);
+  return '#'+[nr,ng,nb].map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+function mixWithBlack(hex, ratio){
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  const nr = Math.round(r * (1 - ratio));
+  const ng = Math.round(g * (1 - ratio));
+  const nb = Math.round(b * (1 - ratio));
+  return '#'+[nr,ng,nb].map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+function genreSlug(name){
+  let s = (name||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'_')
+    .replace(/^_+|_+$/g,'');
+  return s || 'genre';
+}
+
+function getTrackAuthor(tr){
+  // Custom tracks: use the addedBy metadata
+  if(tr.custom && tr.addedBy){
+    return {
+      name: tr.addedBy,
+      initials: tr.addedInitials || tr.addedBy.slice(0,2).toUpperCase(),
+      color: tr.addedColor || '#888780'
+    };
+  }
+  // Base tracks: map set → CORE member (Clem/Max/Mat/Rose)
+  if(tr.set){
+    const core = CORE.find(c => c.set === tr.set);
+    if(core) return {name: core.name, initials: core.initials, color: core.color};
+    const guest = Object.values(fbMembers).find(m => (m.set||setKeyFor(m.name)) === tr.set);
+    if(guest) return {name: guest.name, initials: guest.initials, color: guest.color};
+  }
+  return null;
+}
+
+function mkGenrePill(tr, sty){
+  if(!isAdmin()){
+    return '<span class="pill" style="background:'+sty.bg+';color:'+sty.tc+'">'+sty.label+'</span>';
+  }
+  const options = Object.entries(STYLES).map(([id,s]) =>
+    '<option value="'+id+'"'+(id===tr.s?' selected':'')+'>'+s.label+'</option>'
+  ).join('');
+  return '<select class="pill-select" data-genre-change="'+tr.id+'" title="Changer le genre" style="background:'+sty.bg+';color:'+sty.tc+'">'+options+'</select>';
+}
+
+async function changeTrackGenre(trackId, newGenre){
+  if(!isAdmin()) return;
+  if(!STYLES[newGenre]) return;
+  const existing = fbCustom[trackId];
+  if(existing){
+    await update(ref(db,'custom/'+trackId), { s: newGenre });
+  } else {
+    // Base track: create or update an override
+    await update(ref(db,'overrides/'+trackId), { s: newGenre });
+  }
+}
+window.changeTrackGenre = changeTrackGenre;
 
 // ── STATE ────────────────────────────────────────────────────
-let fbVotes={}, fbCustom={}, fbMembers={}, fbParts={}, fbHearts={}, fbOverrides={};
-let me = null;          // {name, initials, color, set}
+let fbVotes={}, fbCustom={}, fbMembers={}, fbParts={}, fbHearts={}, fbOverrides={}, fbConcerts={}, fbStyles={};
+let me = null;
 let curTab = 'all';
 let curStyle = 'all';
 let showExcl = false;
 let curPartId = null;
+let curEditId = null;
+let curConcertEditId = null;
+let curConcertViewId = null;
 let pickedColor = PALETTE[0];
+let pickerSelection = new Set();
+let pickerStyleFilter = 'all';
+let pickerSearchQuery = '';
 
 function allTracks(){
   const base = BASE.map(tr => fbOverrides[tr.id] ? {...tr, ...fbOverrides[tr.id]} : tr);
@@ -562,6 +808,7 @@ function allTracks(){
 }
 function isExcl(tr){ return Object.keys(fbVotes[tr.id]||{}).length >= 4; }
 function getVoters(id){ return Object.keys(fbVotes[id]||{}); }
+function getHearters(id){ return Object.keys(fbHearts[id]||{}); }
 
 function allMembers(){
   const list = CORE.map(c => ({...c}));
@@ -586,15 +833,11 @@ function saveMe(m){ localStorage.setItem('sl_me', JSON.stringify(m)); }
 
 // ── IDENTITY MODAL ───────────────────────────────────────────
 function openMo(){
-  // Reset color picker
   pickedColor = PALETTE[0];
   renderSwatches();
-  // Clear name input
   document.getElementById('id-name').value = '';
   document.getElementById('id-name').style.borderColor = '';
-  // Render admin buttons
   renderAdmins();
-  // Render guests
   renderGuests();
   document.getElementById('mo-ov').style.display = 'flex';
 }
@@ -604,12 +847,11 @@ function renderAdmins(){
   const el = document.getElementById('mo-admins');
   el.innerHTML = '';
   CORE.forEach(c => {
-    // Use Firebase data if available (in case someone updated their color)
     const fbData = Object.values(fbMembers).find(m=>m.name===c.name);
     const m = fbData || c;
     const btn = document.createElement('button');
     btn.className = 'mbtn';
-    btn.innerHTML = '<div class="mav" style="background:'+m.color+'">'+m.initials+'</div>'+m.name;
+    btn.innerHTML = '<div class="mav" style="background:'+m.color+'">'+m.initials+'</div>'+esc(m.name);
     btn.addEventListener('click', () => { applyMe({...m}); });
     el.appendChild(btn);
   });
@@ -622,18 +864,16 @@ function renderGuests(){
   if(!guests.length){ wrap.style.display='none'; return; }
   wrap.style.display = 'block';
   el.innerHTML = '';
-  const isAdmin = me && CORE.find(c=>c.name===me.name);
+  const adminUser = isAdmin();
   guests.forEach(m => {
     const row = document.createElement('div');
     row.className = 'guest-row';
-    // Login button
     const btn = document.createElement('button');
     btn.className = 'mbtn';
-    btn.innerHTML = '<div class="mav" style="background:'+m.color+'">'+m.initials+'</div>'+m.name;
+    btn.innerHTML = '<div class="mav" style="background:'+m.color+'">'+m.initials+'</div>'+esc(m.name);
     btn.addEventListener('click', () => { applyMe({...m}); });
     row.appendChild(btn);
-    // Delete button (admins only)
-    if(isAdmin){
+    if(adminUser){
       const del = document.createElement('button');
       del.className = 'del-red';
       del.textContent = '🗑️ Supprimer le côté';
@@ -649,7 +889,7 @@ function renderGuests(){
     }
     el.appendChild(row);
   });
-  if(isAdmin){
+  if(adminUser){
     const note = document.createElement('p');
     note.style.cssText = 'font-size:11px;color:var(--faint);margin-top:4px';
     note.textContent = 'Supprimer le côté = supprimer l\'invité et tous ses titres';
@@ -676,15 +916,13 @@ function applyMe(m){
   if(!m.set) m.set = setKeyFor(m.name);
   me = m;
   saveMe(m);
-  // Save guest to Firebase
   if(!CORE.find(c=>c.name===m.name)){
     set(ref(db,'members/'+fbk(m.name)), m);
   }
   document.getElementById('mo-ov').style.display = 'none';
-  // Update id bar
   document.getElementById('idbar').style.display = 'flex';
   document.getElementById('idbadge').innerHTML =
-    '<div class="av" style="background:'+m.color+'">'+m.initials+'</div>'+m.name;
+    '<div class="av" style="background:'+m.color+'">'+m.initials+'</div>'+esc(m.name);
   rebuild();
 }
 
@@ -698,31 +936,41 @@ document.getElementById('mo-confirm').addEventListener('click', () => {
   applyMe({ name, initials, color: pickedColor, set: setKeyFor(name) });
 });
 
-// Close modals on overlay click
 document.getElementById('mo-ov').addEventListener('click', e => {
   if(e.target === document.getElementById('mo-ov')) document.getElementById('mo-ov').style.display = 'none';
 });
 
 // ── ADD TRACK ────────────────────────────────────────────────
-window.openAdd = function(){
-  if(!me){ openMo(); return; }
-  const userSet = me.set || setKeyFor(me.name);
-  const allSets = getAllSets();
-  // Populate setlist select
-  const sel = document.getElementById('f-set');
+// Populate a style select with all current STYLES, preserving selected value
+function populateStyleSelect(selectId, preferredValue){
+  const sel = document.getElementById(selectId);
+  if(!sel) return;
+  const previous = preferredValue || sel.value || 'pop';
   sel.innerHTML = '';
-  Object.entries(allSets).forEach(([k,v]) => {
+  // Built-ins first (in a nice order)
+  const builtinOrder = ['pop','rock','rnb','electro','disco','hiphop','variete','latin','medley'];
+  const customKeys = Object.keys(STYLES).filter(k => !BUILTIN_STYLES[k]).sort((a,b) =>
+    (STYLES[a].label||'').localeCompare(STYLES[b].label||'')
+  );
+  [...builtinOrder, ...customKeys].forEach(k => {
+    if(!STYLES[k]) return;
     const opt = document.createElement('option');
-    opt.value = k; opt.textContent = v;
-    if(k===userSet) opt.selected = true;
+    opt.value = k;
+    opt.textContent = STYLES[k].label;
+    if(k === previous) opt.selected = true;
     sel.appendChild(opt);
   });
-  document.getElementById('add-hint').textContent = '→ Sera ajouté dans "'+allSets[userSet]+'"';
+}
+
+window.openAdd = function(){
+  if(!me){ openMo(); return; }
+  document.getElementById('add-hint').textContent = 'Le titre sera ajouté au répertoire et visible par tous.';
   document.getElementById('f-err').style.display = 'none';
   document.getElementById('f-title').value = '';
   document.getElementById('f-artist').value = '';
   document.getElementById('f-dur').value = '';
   document.getElementById('f-note').value = '';
+  populateStyleSelect('f-style', 'pop');
   document.getElementById('add-ov').style.display = 'flex';
   setTimeout(() => document.getElementById('f-title').focus(), 100);
 };
@@ -743,7 +991,7 @@ window.submitTrack = async function(){
     id, t, a,
     d: document.getElementById('f-dur').value.trim()||'?:??',
     s: document.getElementById('f-style').value,
-    set: document.getElementById('f-set').value,
+    set: me.set || setKeyFor(me.name),
     n: document.getElementById('f-note').value.trim()||null,
     custom:true, addedBy:me.name, addedColor:me.color, addedInitials:me.initials,
     addedAt: Date.now()
@@ -754,8 +1002,6 @@ window.submitTrack = async function(){
 };
 
 // ── EDIT TRACK ─────────────────────────────────────────────
-let curEditId = null;
-
 window.openEdit = function(id){
   if(!me){ openMo(); return; }
   const tr = allTracks().find(t => t.id === id);
@@ -766,7 +1012,7 @@ window.openEdit = function(id){
   document.getElementById('e-artist').value = tr.a || '';
   document.getElementById('e-dur').value    = tr.d || '';
   document.getElementById('e-note').value   = tr.n || '';
-  document.getElementById('e-style').value  = tr.s || 'pop';
+  populateStyleSelect('e-style', tr.s || 'pop');
   document.getElementById('e-err').style.display = 'none';
   document.getElementById('edit-ov').style.display = 'flex';
   setTimeout(() => document.getElementById('e-title').focus(), 100);
@@ -786,7 +1032,6 @@ window.saveEdit = async function(){
   const existing = fbCustom[curEditId];
   const baseTrack = BASE.find(tr=>tr.id===curEditId);
   if(existing) {
-    // Titre custom — on met à jour directement
     await set(ref(db,'custom/'+curEditId), {
       ...existing,
       t, a,
@@ -795,7 +1040,6 @@ window.saveEdit = async function(){
       n: document.getElementById('e-note').value.trim() || null,
     });
   } else if(baseTrack) {
-    // Titre de base — on crée une entrée custom qui override le base
     await set(ref(db,'overrides/'+curEditId), {
       t, a,
       d: document.getElementById('e-dur').value.trim() || baseTrack.d,
@@ -808,21 +1052,19 @@ window.saveEdit = async function(){
 };
 
 // ── PARTITION ────────────────────────────────────────────────
-async function openPart(tr){
+function openPart(tr){
   curPartId = tr.id;
   document.getElementById('pt-title').textContent  = tr.t;
   document.getElementById('pt-artist').textContent = tr.a;
-  // Lyrics
-  const lw = document.getElementById('pt-lyrics-wrap');
+  const link = document.getElementById('pt-lyrics-link');
   const url = LYRICS[tr.t];
   if(url){
-    lw.innerHTML = '<a class="part-link" href="'+url+'" target="_blank" rel="noopener">📖 Voir les paroles →</a>';
+    link.innerHTML = '<a class="part-link" href="'+url+'" target="_blank" rel="noopener">📖 Voir les paroles sur le web →</a>';
   } else {
-    const saved = (fbParts[tr.id]||{}).lyrics||'';
-    lw.innerHTML = '<div class="pblock"><label>📖 Paroles</label><textarea class="ta" id="pa-lyrics" placeholder="Colle les paroles ici..." style="min-height:100px">'+saved+'</textarea></div>';
+    link.innerHTML = '';
   }
-  // Chords
   const d = fbParts[tr.id]||{};
+  document.getElementById('pa-lyrics').value = d.lyrics || '';
   document.getElementById('pa-guitar').value = d.guitar||'';
   document.getElementById('pa-bass').value   = d.bass||'';
   document.getElementById('pa-keys').value   = d.keys||'';
@@ -831,7 +1073,36 @@ async function openPart(tr){
   document.getElementById('pt-status').textContent = '';
   document.getElementById('pt-status').className   = '';
   document.getElementById('pt-upd').textContent = d.updatedBy ? 'Modifié par '+d.updatedBy : '';
+  renderAudioSection();
   document.getElementById('part-ov').style.display = 'flex';
+}
+
+function renderAudioSection(){
+  const content = document.getElementById('pt-audio-content');
+  if(!content || !curPartId) return;
+  const d = fbParts[curPartId]||{};
+  if(d.audioUrl){
+    const when = d.audioUploadedAt ? new Date(d.audioUploadedAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    content.innerHTML =
+      '<audio class="audio-player" controls preload="metadata" src="'+esc(d.audioUrl)+'"></audio>'
+      +'<div class="audio-meta">'
+        +'<span class="audio-name">🎧 '+esc(d.audioName||'Maquette')+'</span>'
+        +(d.audioUploadedBy?'<span>· ajouté par '+esc(d.audioUploadedBy)+(when?' le '+when:'')+'</span>':'')
+        +(me?'<button class="audio-del-btn" onclick="deleteAudio()">🗑️ Retirer</button>':'')
+      +'</div>'
+      +(d.audioOriginalUrl?'<p class="audio-original">↗ <a href="'+esc(d.audioOriginalUrl)+'" target="_blank" rel="noopener">Lien source</a></p>':'');
+  } else {
+    content.innerHTML =
+      '<div class="audio-empty">'
+        +'<input type="url" class="inp audio-url-inp" id="pa-audio-url-inp" placeholder="Colle l\'URL de ta maquette (Drive, Dropbox, SoundCloud…)">'
+        +'<button class="audio-up-btn" onclick="saveAudioUrl()">+ Ajouter</button>'
+        +'<p class="audio-help">💡 Héberge ton fichier sur Google Drive ou Dropbox (partage "Tous ceux qui ont le lien"), puis colle le lien ici. Je le convertis en lien direct.</p>'
+      +'</div>';
+    const inp = document.getElementById('pa-audio-url-inp');
+    if(inp){
+      inp.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); saveAudioUrl(); } });
+    }
+  }
 }
 
 window.closePart = function(){ document.getElementById('part-ov').style.display='none'; curPartId=null; };
@@ -840,33 +1111,314 @@ document.getElementById('part-ov').addEventListener('click', e => {
   if(e.target === document.getElementById('part-ov')) closePart();
 });
 
+// Bind clear buttons (delegate once at init since the buttons are static in HTML)
+document.querySelectorAll('[data-clear]').forEach(btn => {
+  btn.addEventListener('click', () => clearPartSection(btn.dataset.clear));
+});
+
+window.clearPartSection = async function(field){
+  if(!curPartId) return;
+  const el = document.getElementById('pa-'+field);
+  if(el) el.value = '';
+  try{
+    // Silent save: only clear the field, don't touch updatedBy/updatedAt
+    const updates = {};
+    updates[field] = null;
+    await update(ref(db,'partitions/'+curPartId), updates);
+  }catch(e){ console.error('clear error:', e); }
+};
+
 window.savePart = async function(){
   if(!curPartId) return;
-  const lyrEl = document.getElementById('pa-lyrics');
   const data = {
+    lyrics: document.getElementById('pa-lyrics').value.trim()||null,
     guitar: document.getElementById('pa-guitar').value.trim()||null,
     bass:   document.getElementById('pa-bass').value.trim()||null,
     keys:   document.getElementById('pa-keys').value.trim()||null,
     drums:  document.getElementById('pa-drums').value.trim()||null,
     notes:  document.getElementById('pa-notes').value.trim()||null,
-    lyrics: lyrEl ? lyrEl.value.trim()||null : null,
     updatedBy: me?me.name:'?', updatedAt: Date.now()
   };
   const st = document.getElementById('pt-status');
   try{
-    await set(ref(db,'partitions/'+curPartId), data);
+    // Use update() so audio fields (audioUrl, audioName, etc.) are preserved
+    await update(ref(db,'partitions/'+curPartId), data);
     st.textContent='✓ Sauvegardé !'; st.className='sav-ok';
     document.getElementById('pt-upd').textContent = 'Modifié par '+(me?me.name:'?');
     setTimeout(()=>{ st.textContent=''; st.className=''; }, 2500);
   }catch(e){ st.textContent='Erreur'; st.className='sav-err'; }
 };
 
-// ── VOTE ─────────────────────────────────────────────────────
+// ── AUDIO (URL externe : Drive, Dropbox, etc.) ───────────────
+function normalizeAudioUrl(url){
+  if(!url) return url;
+  url = url.trim();
+  // Google Drive share link → direct
+  let m = url.match(/drive\.google\.com\/file\/d\/([^/?#]+)/);
+  if(m) return 'https://drive.google.com/uc?export=download&id='+m[1];
+  m = url.match(/drive\.google\.com\/open\?id=([^&]+)/);
+  if(m) return 'https://drive.google.com/uc?export=download&id='+m[1];
+  // Dropbox: convertir dl=0 en raw=1 pour streaming direct
+  if(/dropbox\.com/.test(url)){
+    if(url.includes('dl=0')) return url.replace(/([?&])dl=0/, '$1raw=1');
+    if(!/[?&](dl|raw)=/.test(url)) return url + (url.includes('?')?'&':'?') + 'raw=1';
+  }
+  return url;
+}
+
+function extractAudioName(url){
+  if(!url) return 'Maquette';
+  try{
+    // Dropbox URL pattern: /s/xxx/filename.mp3
+    let m = url.match(/dropbox\.com\/[^?#]*?\/([^/?#]+\.(?:mp3|wav|m4a|ogg|aac|flac))/i);
+    if(m) return decodeURIComponent(m[1]);
+    // Generic: last path segment if it looks like a filename
+    const u = new URL(url);
+    const seg = u.pathname.split('/').filter(Boolean).pop();
+    if(seg && /\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(seg)) return decodeURIComponent(seg);
+    // Google Drive: no name in URL, use hostname
+    if(/drive\.google\.com/.test(url)) return 'Maquette (Google Drive)';
+    if(/dropbox\.com/.test(url)) return 'Maquette (Dropbox)';
+    if(/soundcloud\.com/.test(url)) return 'Maquette (SoundCloud)';
+    return 'Maquette';
+  }catch(e){ return 'Maquette'; }
+}
+
+window.saveAudioUrl = async function(){
+  if(!curPartId || !me){ openMo(); return; }
+  const inp = document.getElementById('pa-audio-url-inp');
+  if(!inp) return;
+  const rawUrl = inp.value.trim();
+  if(!rawUrl){ inp.focus(); return; }
+  // Quick URL validation
+  try{ new URL(rawUrl); }catch(e){ alert('URL invalide'); return; }
+  const url = normalizeAudioUrl(rawUrl);
+  const name = extractAudioName(rawUrl);
+  try{
+    await update(ref(db,'partitions/'+curPartId), {
+      audioUrl: url,
+      audioName: name,
+      audioOriginalUrl: rawUrl !== url ? rawUrl : null,
+      audioStoragePath: null,
+      audioUploadedBy: me.name,
+      audioUploadedAt: Date.now(),
+      updatedBy: me.name,
+      updatedAt: Date.now()
+    });
+  }catch(e){ console.error(e); alert('Erreur : '+(e.message||e)); }
+};
+
+window.deleteAudio = async function(){
+  if(!curPartId || !me){ openMo(); return; }
+  const d = fbParts[curPartId]||{};
+  if(!d.audioUrl) return;
+  if(!confirm('Retirer la maquette de ce titre ?')) return;
+  try{
+    await update(ref(db,'partitions/'+curPartId), {
+      audioUrl: null, audioName: null, audioOriginalUrl: null, audioStoragePath: null,
+      audioUploadedBy: null, audioUploadedAt: null,
+      updatedBy: me.name, updatedAt: Date.now()
+    });
+  }catch(e){ console.error(e); alert('Erreur'); }
+};
+
+// ── GENRE CREATION ───────────────────────────────────────────
+let genreTargetSelectId = null;
+let genrePickedColor = GENRE_PALETTE[0];
+
+window.openGenreModal = function(targetSelectId){
+  if(!me){ openMo(); return; }
+  genreTargetSelectId = targetSelectId || 'f-style';
+  genrePickedColor = GENRE_PALETTE[0];
+  document.getElementById('g-name').value = '';
+  document.getElementById('g-err').style.display = 'none';
+  renderGenreSwatches();
+  updateGenrePreview();
+  document.getElementById('g-name').addEventListener('input', updateGenrePreview);
+  document.getElementById('genre-ov').style.display = 'flex';
+  setTimeout(() => document.getElementById('g-name').focus(), 100);
+};
+
+window.closeGenreModal = function(){
+  document.getElementById('genre-ov').style.display = 'none';
+  genreTargetSelectId = null;
+};
+
+document.getElementById('genre-ov').addEventListener('click', e => {
+  if(e.target === document.getElementById('genre-ov')) closeGenreModal();
+});
+
+function renderGenreSwatches(){
+  const el = document.getElementById('g-colors');
+  el.innerHTML = '';
+  GENRE_PALETTE.forEach(col => {
+    const sw = document.createElement('div');
+    sw.className = 'sw' + (col===genrePickedColor?' on':'');
+    sw.style.background = col;
+    sw.addEventListener('click', () => {
+      genrePickedColor = col;
+      el.querySelectorAll('.sw').forEach(s => s.classList.toggle('on', s.style.background===col));
+      updateGenrePreview();
+    });
+    el.appendChild(sw);
+  });
+}
+
+function updateGenrePreview(){
+  const name = document.getElementById('g-name').value.trim() || 'Nom du genre';
+  const bg = mixWithWhite(genrePickedColor, 0.85);
+  const tc = mixWithBlack(genrePickedColor, 0.6);
+  document.getElementById('g-preview').innerHTML =
+    '<span class="pill" style="background:'+bg+';color:'+tc+'">'+esc(name)+'</span>';
+}
+
+window.saveNewGenre = async function(){
+  const name = document.getElementById('g-name').value.trim();
+  if(!name){
+    document.getElementById('g-err').style.display='block';
+    document.getElementById('g-name').focus();
+    return;
+  }
+  document.getElementById('g-err').style.display='none';
+  // Generate unique slug
+  let slug = genreSlug(name);
+  if(STYLES[slug]){
+    slug = slug + '_' + Math.random().toString(36).slice(2,5);
+  }
+  const data = {
+    label: name,
+    color: genrePickedColor,
+    bg: mixWithWhite(genrePickedColor, 0.85),
+    tc: mixWithBlack(genrePickedColor, 0.6),
+    addedBy: me?me.name:null,
+    addedAt: Date.now()
+  };
+  try{
+    await set(ref(db,'styles/'+slug), data);
+    // Immediately merge into local STYLES so dropdown can pick it up
+    STYLES[slug] = data;
+    // Repopulate the target select with the new genre selected
+    if(genreTargetSelectId){
+      populateStyleSelect(genreTargetSelectId, slug);
+    }
+    closeGenreModal();
+  }catch(e){ console.error(e); alert('Erreur lors de la création du genre'); }
+};
+
+// ── PDF EXPORT : PARTITION ───────────────────────────────────
+window.exportPartitionPDF = function(){
+  if(!curPartId || !window.jspdf){ alert('Impossible de générer le PDF (librairie non chargée)'); return; }
+  const tr = allTracks().find(t => t.id === curPartId);
+  if(!tr) return;
+  const data = {
+    lyrics: document.getElementById('pa-lyrics').value.trim(),
+    guitar: document.getElementById('pa-guitar').value.trim(),
+    bass:   document.getElementById('pa-bass').value.trim(),
+    keys:   document.getElementById('pa-keys').value.trim(),
+    drums:  document.getElementById('pa-drums').value.trim(),
+    notes:  document.getElementById('pa-notes').value.trim()
+  };
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'mm',format:'a4'});
+  const pageW = 210, pageH = 297, margin = 18, maxW = pageW - 2*margin;
+  let y = 25;
+
+  // Header band
+  doc.setFillColor(26,23,20);
+  doc.rect(0, 0, pageW, 3, 'F');
+
+  // Title
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(22);
+  doc.setTextColor(26,23,20);
+  const titleLines = doc.splitTextToSize(tr.t, maxW);
+  titleLines.forEach(ln => { doc.text(ln, margin, y); y += 9; });
+  // Artist
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(12);
+  doc.setTextColor(107,101,96);
+  doc.text(tr.a, margin, y);
+  y += 5;
+  // Meta
+  doc.setFontSize(9);
+  doc.setTextColor(160,155,150);
+  const meta = 'La Sauce · ' + (tr.d||'?') + ' · ' + (STYLES[tr.s]?STYLES[tr.s].label:tr.s) + ' · Exporté le ' + new Date().toLocaleDateString('fr-FR');
+  doc.text(meta, margin, y);
+  y += 4;
+  // Divider
+  doc.setDrawColor(232,226,218);
+  doc.setLineWidth(0.4);
+  doc.line(margin, y, pageW-margin, y);
+  y += 8;
+
+  function ensureSpace(needed){
+    if(y + needed > pageH - 18){
+      doc.addPage();
+      y = 25;
+    }
+  }
+
+  function addSection(title, content, accent){
+    if(!content) return;
+    ensureSpace(14);
+    // Accent bar
+    doc.setFillColor(...(accent||[26,23,20]));
+    doc.rect(margin, y-3, 2, 5, 'F');
+    // Title
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.setTextColor(26,23,20);
+    doc.text(title.toUpperCase(), margin+5, y);
+    y += 6;
+    // Content
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.setTextColor(50,45,40);
+    const lines = doc.splitTextToSize(content, maxW);
+    lines.forEach(line => {
+      ensureSpace(5);
+      doc.text(line, margin, y);
+      y += 5;
+    });
+    y += 5;
+  }
+
+  if(data.lyrics){
+    addSection('📖 Paroles', data.lyrics, [226,75,74]);
+  } else if(LYRICS[tr.t]){
+    ensureSpace(12);
+    doc.setFont('helvetica','italic');
+    doc.setFontSize(9);
+    doc.setTextColor(140,135,130);
+    doc.text('Paroles externes : ' + LYRICS[tr.t], margin, y);
+    y += 8;
+  }
+  addSection('Guitare', data.guitar, [55,138,221]);
+  addSection('Basse', data.bass, [187,117,23]);
+  addSection('Clavier', data.keys, [83,74,183]);
+  addSection('Batterie', data.drums, [100,100,100]);
+  addSection('Notes', data.notes, [29,158,117]);
+
+  // Footer on all pages
+  const pages = doc.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8);
+    doc.setTextColor(184,179,174);
+    doc.text('Setlists — La Sauce 🎵', margin, pageH-10);
+    doc.text(i+' / '+pages, pageW-margin, pageH-10, {align:'right'});
+  }
+
+  const fname = sanitizeFilename(tr.t) + '_' + sanitizeFilename(tr.a) + '.pdf';
+  doc.save(fname);
+};
+
+// ── VOTE / HEART / DELETE ────────────────────────────────────
 async function toggleVote(id){
   if(!me){ openMo(); return; }
   await runTransaction(ref(db,'votes/'+id+'/'+fbk(me.name)), cur => cur?null:true);
 }
-
 async function toggleHeart(id){
   if(!me){ openMo(); return; }
   await runTransaction(ref(db,'hearts/'+id+'/'+fbk(me.name)), cur => cur?null:true);
@@ -875,8 +1427,25 @@ async function delCustom(id){
   if(!confirm('Supprimer ce titre ?')) return;
   await remove(ref(db,'custom/'+id));
 }
+window.toggleVote = toggleVote;
+window.toggleHeart = toggleHeart;
+window.delCustom = delCustom;
+window.openPart = openPart;
 
-// ── RENDER ───────────────────────────────────────────────────
+// ── RENDER HELPERS ───────────────────────────────────────────
+function mkHeartPips(id){
+  const hearters = getHearters(id);
+  if(!hearters.length) return '';
+  const members = allMembers();
+  return '<div class="hpips">'+hearters.map(k=>{
+    const m = members.find(x=>fbk(x.name)===k);
+    const ini = m?m.initials:k.slice(0,2).toUpperCase();
+    const col = m?m.color:'#888';
+    const nm  = m?m.name:k;
+    return '<span class="hpip" style="background:'+col+'" title="❤️ '+esc(nm)+'">'+esc(ini)+'</span>';
+  }).join('')+'</div>';
+}
+
 function mkVoteRow(tr){
   const vl = getVoters(tr.id);
   const myK = me ? fbk(me.name) : null;
@@ -888,20 +1457,20 @@ function mkVoteRow(tr){
     const on = vl.includes(k);
     const ini = m?m.initials:k.slice(0,2).toUpperCase();
     const col = m?m.color:'#888';
-    return '<span class="pip'+(on?' on':'')+'"'+(on?' style="background:'+col+';border-color:'+col+'"':'')+' title="'+(m?m.name:k)+'">'+ini+'</span>';
+    return '<span class="pip'+(on?' on':'')+'"'+(on?' style="background:'+col+';border-color:'+col+'"':'')+' title="'+(m?esc(m.name):esc(k))+'">'+esc(ini)+'</span>';
   }).join('');
   const hasData = fbParts[tr.id] && Object.values(fbParts[tr.id]).some(v=>v&&typeof v==='string'&&v.length>0);
-  const isAdminUser = me && CORE.find(x=>x.name===me.name);
-  const editBtn = isAdminUser ? '<button class="delbtn" data-edit="'+tr.id+'" title="Modifier" style="margin-right:2px">✏️</button>' : '';
+  const hasAudio = fbParts[tr.id] && fbParts[tr.id].audioUrl;
+  const adminUser = isAdmin();
+  const editBtn = adminUser ? '<button class="delbtn" data-edit="'+tr.id+'" title="Modifier" style="margin-right:2px">✏️</button>' : '';
   const del = tr.custom ? '<button class="delbtn" data-del="'+tr.id+'">✕</button>' : '';
-  // Hearts
-  const heartVoters = Object.keys(fbHearts[tr.id]||{});
-  const hearted = myK && heartVoters.includes(myK);
-  const heartCount = heartVoters.length;
+  const hearters = getHearters(tr.id);
+  const hearted = myK && hearters.includes(myK);
+  const heartPips = mkHeartPips(tr.id);
   return '<div class="vrow">'
-    +'<button class="pbtn'+(hasData?' has-data':'')+'" data-part="'+tr.id+'" title="Partition / Accords">📄</button>'
+    +'<button class="pbtn'+(hasData?' has-data':'')+'" data-part="'+tr.id+'" title="'+(hasAudio?'🎧 Maquette + ':'')+'Partition / Accords">'+(hasAudio?'🎧':'📄')+'</button>'
     +'<button class="hbtn'+(hearted?' hearted':'')+'" data-heart="'+tr.id+'" title="Coup de cœur">❤️</button>'
-    +(heartCount>0?'<span class="hcount">'+heartCount+'</span>':'')
+    +heartPips
     +'<button class="vbtn'+(voted?' voted':'')+'" data-vote="'+tr.id+'">✕</button>'
     +'<div class="pips">'+pips+'</div>'
     +editBtn+del+'</div>';
@@ -910,13 +1479,13 @@ function mkVoteRow(tr){
 // ── TABS ─────────────────────────────────────────────────────
 function buildTabs(){
   const cc = Object.keys(fbCustom).length;
-  const allSets = getAllSets();
+  const concertCount = Object.keys(fbConcerts).length;
   const el = document.getElementById('tabs');
   el.innerHTML = '';
   const tabDefs = [
     {id:'all', label:'Toutes'},
-    ...Object.entries(allSets).map(([k,v])=>({id:k,label:v})),
     {id:'new', label:'✦ Nouveautés', badge:cc},
+    {id:'concerts', label:'🎤 Concerts', badge:concertCount},
   ];
   tabDefs.forEach(t => {
     const btn = document.createElement('button');
@@ -936,10 +1505,9 @@ function buildTabs(){
 // ── FILTERS ──────────────────────────────────────────────────
 function buildFilters(){
   const el = document.getElementById('filters');
-  if(curTab==='new'){ el.innerHTML=''; return; }
+  if(curTab==='new' || curTab==='concerts'){ el.innerHTML=''; return; }
   const ec = allTracks().filter(isExcl).length;
   el.innerHTML = '';
-  // Style filters
   [{id:'all',label:'Tous les styles'}, ...Object.entries(STYLES).map(([id,s])=>({id,label:s.label}))].forEach(f=>{
     const btn = document.createElement('button');
     btn.className = 'fb'+(curStyle===f.id?' on':'');
@@ -948,10 +1516,9 @@ function buildFilters(){
     el.appendChild(btn);
   });
   const sep = document.createElement('div'); sep.className='sep'; el.appendChild(sep);
-  // Excl filter
   const excl = document.createElement('button');
   excl.className = 'fb excl-btn'+(showExcl?' on':'');
-  excl.textContent = '🗑️ Exclus'+(ec>0?' ('+ec+')':'');
+  excl.textContent = (showExcl?'← Retour à la liste ':'🗑️ Voir les exclus')+(ec>0&&!showExcl?' ('+ec+')':'');
   excl.addEventListener('click', ()=>{ showExcl=!showExcl; rebuild(); });
   el.appendChild(excl);
 }
@@ -968,16 +1535,24 @@ function buildStats(){
     ].map(s=>'<div class="stat"><div class="stat-n">'+s.n+'</div><div class="stat-l">'+s.l+'</div></div>').join('');
     return;
   }
-  const sf = curTab==='all' ? null : curTab;
+  if(curTab==='concerts'){
+    const concerts = Object.values(fbConcerts);
+    const totalTracks = concerts.reduce((a,c)=>a+((c.trackIds||[]).filter(Boolean).length),0);
+    el.innerHTML = [
+      {n:concerts.length,l:'concerts'},
+      {n:totalTracks,l:'titres programmés'},
+      {n:'—',l:''},
+    ].map(s=>'<div class="stat"><div class="stat-n">'+s.n+'</div><div class="stat-l">'+s.l+'</div></div>').join('');
+    return;
+  }
   const f = allTracks().filter(tr=>
-    (!sf||tr.set===sf) &&
     (curStyle==='all'||tr.s===curStyle) &&
-    (!showExcl||!isExcl(tr))
+    (!showExcl||isExcl(tr))
   );
   const total = f.filter(tr=>!isExcl(tr)).reduce((a,tr)=>a+pd(tr.d),0);
   el.innerHTML = [
     {n:f.length,l:'morceaux'},
-    {n:[...new Set(f.map(tr=>tr.set))].length,l:'setlists'},
+    {n:[...new Set(f.map(tr=>tr.s))].length,l:'genres'},
     {n:fl(total),l:'durée totale'},
   ].map(s=>'<div class="stat"><div class="stat-n">'+s.n+'</div><div class="stat-l">'+s.l+'</div></div>').join('');
 }
@@ -991,35 +1566,39 @@ function buildNew(){
     main.innerHTML = '<div class="empty">Aucun titre ajouté pour l\'instant.<br>Soyez le premier !</div>';
     return;
   }
-  const allSets = getAllSets();
+  const myK = me ? fbk(me.name) : null;
+  const adminUser = isAdmin();
+
   custom.forEach(tr => {
     const sty = STYLES[tr.s]||STYLES.pop;
     const card = document.createElement('div');
     card.className = 'ncard';
     const when = tr.addedAt ? ' · '+new Date(tr.addedAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
-    const isAdmin = me && CORE.find(c=>c.name===me.name);
-    const canDel = me && (me.name===tr.addedBy || isAdmin);
+    const canDel = me && (me.name===tr.addedBy || adminUser);
+    const hearters = getHearters(tr.id);
+    const hearted = myK && hearters.includes(myK);
+    const heartCount = hearters.length;
     card.innerHTML =
       '<div class="ncard-head">'
-        +'<div style="width:32px;height:32px;border-radius:50%;background:'+(tr.addedColor||'#1D9E75')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+(tr.addedInitials||'?')+'</div>'
-        +'<div><div class="ncard-title">'+tr.t+'</div><div class="ncard-artist">'+tr.a+'</div></div>'
+        +'<div style="width:32px;height:32px;border-radius:50%;background:'+(tr.addedColor||'#1D9E75')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+esc(tr.addedInitials||'?')+'</div>'
+        +'<div><div class="ncard-title">'+esc(tr.t)+'</div><div class="ncard-artist">'+esc(tr.a)+'</div></div>'
         +'<span class="pill" style="margin-left:auto;background:'+sty.bg+';color:'+sty.tc+'">'+sty.label+'</span>'
       +'</div>'
       +'<div class="ncard-meta">'
-        +'<span class="pill" style="background:var(--cream);color:var(--muted);border:1px solid var(--border)">'+(allSets[tr.set]||tr.set)+'</span>'
-        +'<span style="font-size:12px;color:var(--muted)">'+tr.d+'</span>'
-        +(tr.n?'<span style="font-size:11px;color:var(--faint);font-style:italic">'+tr.n+'</span>':'')
+        +'<span style="font-size:12px;color:var(--muted)">'+esc(tr.d||'?')+'</span>'
+        +(tr.n?'<span style="font-size:11px;color:var(--faint);font-style:italic">'+esc(tr.n)+'</span>':'')
       +'</div>'
-      +'<div class="ncard-by">Ajouté par '+(tr.addedBy||'?')+when+'</div>'
+      +'<div class="ncard-by">Ajouté par '+esc(tr.addedBy||'?')+when+'</div>'
       +'<div class="ncard-actions">'
         +'<button class="btn sm" data-part="'+tr.id+'">📄 Partition</button>'
-        +'<button class="btn sm'+(Object.keys(fbHearts[tr.id]||{}).includes(myK||'_')?' hearted':'')+'" data-heart="'+tr.id+'">❤️ '+(Object.keys(fbHearts[tr.id]||{}).length||'')+' Coup de cœur</button>'
+        +'<button class="btn sm'+(hearted?' danger':'')+'" data-heart="'+tr.id+'">❤️ '+heartCount+'</button>'
+        +mkHeartPips(tr.id)
         +(canDel?'<button class="btn sm" data-edit="'+tr.id+'">✏️ Modifier</button>':'')
         +(canDel?'<button class="btn sm danger" data-del="'+tr.id+'">Supprimer</button>':'')
       +'</div>';
     main.appendChild(card);
   });
-  // Events
+
   main.querySelectorAll('[data-part]').forEach(b=>b.addEventListener('click',()=>{
     const tr=allTracks().find(t=>t.id===b.dataset.part);
     if(tr) openPart(tr);
@@ -1029,76 +1608,68 @@ function buildNew(){
   main.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>delCustom(b.dataset.del)));
 }
 
-// ── SETLIST VIEW ─────────────────────────────────────────────
+// ── SETLIST VIEW (by genre) ──────────────────────────────────
 function buildSetlists(){
-  const allSets = getAllSets();
-  const sf = curTab==='all' ? null : curTab;
   const f = allTracks().filter(tr=>
-    (!sf||tr.set===sf) &&
     (curStyle==='all'||tr.s===curStyle) &&
-    (!showExcl||!isExcl(tr))
+    (!showExcl||isExcl(tr))
   );
   const main = document.getElementById('main');
   main.innerHTML = '';
-  const styleOrder = ['medley','electro','disco','pop','rnb','rock','hiphop','variete','latin'];
-  const show = sf ? [sf] : Object.keys(allSets);
 
-  show.forEach(setK => {
-    const st = f.filter(tr=>tr.set===setK);
-    if(!st.length) return;
-    const total = st.filter(tr=>!isExcl(tr)).reduce((a,tr)=>a+pd(tr.d),0);
+  if(!f.length){
+    main.innerHTML = '<div class="empty">'+(showExcl?'Aucun titre exclu pour l\'instant.':'Aucun titre ne correspond au filtre.')+'</div>';
+    return;
+  }
+
+  const builtinOrder = ['medley','electro','disco','pop','rnb','rock','hiphop','variete','latin'];
+  const customKeys = Object.keys(STYLES).filter(k => !BUILTIN_STYLES[k]).sort((a,b) =>
+    (STYLES[a].label||'').localeCompare(STYLES[b].label||'')
+  );
+  const styleOrder = [...builtinOrder, ...customKeys];
+
+  styleOrder.forEach(sk => {
+    const gt = f.filter(tr=>tr.s===sk);
+    if(!gt.length) return;
+    const sty = STYLES[sk] || STYLES.pop;
+    const gsec = gt.filter(tr=>!isExcl(tr)).reduce((a,tr)=>a+pd(tr.d),0);
+
     const blk = document.createElement('div');
     blk.className = 'sblock';
-    blk.innerHTML = '<div class="shead">'
-      +'<span class="sname">'+(allSets[setK]||setLabel(setK))+'</span>'
-      +'<span class="smeta">'+st.length+' titre'+(st.length>1?'s':'')+'</span>'
-      +'<span class="stotal">Durée : '+fl(total)+'</span>'
+    blk.innerHTML = '<div class="shead" style="border-bottom-color:'+sty.color+'">'
+      +'<span class="sname" style="color:'+sty.tc+'">'+sty.label+'</span>'
+      +'<span class="smeta">'+gt.length+' titre'+(gt.length>1?'s':'')+'</span>'
+      +'<span class="stotal">Durée : '+fl(gsec)+'</span>'
       +'</div>';
 
-    styleOrder.forEach(sk => {
-      const gt = st.filter(tr=>tr.s===sk);
-      if(!gt.length) return;
-      const sty = STYLES[sk];
-      const gsec = gt.filter(tr=>!isExcl(tr)).reduce((a,tr)=>a+pd(tr.d),0);
-      const grp = document.createElement('div');
-      grp.className = 'sgrp';
-      grp.innerHTML = '<div class="sgrp-lbl">'
-        +'<div class="sgrp-dot" style="background:'+sty.color+'"></div>'
-        +'<span class="sgrp-name">'+sty.label+'</span>'
-        +'<span class="sgrp-dur">'+gt.length+' titre'+(gt.length>1?'s':'')+' · '+fs(gsec)+'</span>'
+    const td = document.createElement('div');
+    td.className = 'tracks';
+    gt.forEach((tr,i) => {
+      const excl = isExcl(tr);
+      const author = getTrackAuthor(tr);
+      const el = document.createElement('div');
+      el.className = 'track'+(tr.s==='medley'?' is-med':'')+(excl?' is-excl':'')+(tr.custom?' is-new':'');
+      const medleyTag = tr.s==='medley' ? '<span class="mtag">Medley</span>' : '';
+      const authorTag = author
+        ? '<span class="ntag" style="background:'+author.color+'25;color:'+author.color+'" title="Ajouté par '+esc(author.name)+'">'+esc(author.initials)+'</span>'
+        : '';
+      el.innerHTML = '<div class="trow">'
+        +'<span class="tnum">'+(i+1)+'</span>'
+        +'<div class="tinfo">'
+          +'<div class="tt">'+medleyTag+authorTag+(medleyTag||authorTag?' ':'')+esc(tr.t)+'</div>'
+          +'<div class="ta2">'+esc(tr.a)+'</div>'
+          +(tr.n?'<div class="tnote">'+esc(tr.n)+'</div>':'')
+        +'</div>'
+        +'<span class="tdur">'+esc(tr.d||'?')+'</span>'
+        +mkGenrePill(tr, sty)
+        +mkVoteRow(tr)
         +'</div>';
-
-      const td = document.createElement('div');
-      td.className = 'tracks';
-      gt.forEach((tr,i) => {
-        const excl = isExcl(tr);
-        const el = document.createElement('div');
-        el.className = 'track'+(tr.s==='medley'?' is-med':'')+(excl?' is-excl':'')+(tr.custom?' is-new':'');
-        const prefix = tr.s==='medley'
-          ? '<span class="mtag">Medley</span>'
-          : tr.custom
-            ? '<span class="ntag" style="background:'+(tr.addedColor||'#1D9E75')+'25;color:'+(tr.addedColor||'#085041')+'">✦ '+(tr.addedBy||'?')+'</span>'
-            : '';
-        el.innerHTML = '<div class="trow">'
-          +'<span class="tnum">'+(i+1)+'</span>'
-          +'<div class="tinfo">'
-            +'<div class="tt">'+prefix+' '+tr.t+'</div>'
-            +'<div class="ta2">'+tr.a+'</div>'
-            +(tr.n?'<div class="tnote">'+tr.n+'</div>':'')
-          +'</div>'
-          +'<span class="tdur">'+tr.d+'</span>'
-          +'<span class="pill" style="background:'+sty.bg+';color:'+sty.tc+'">'+sty.label+'</span>'
-          +mkVoteRow(tr)
-          +'</div>';
-        td.appendChild(el);
-      });
-      grp.appendChild(td);
-      blk.appendChild(grp);
+      td.appendChild(el);
     });
+    blk.appendChild(td);
     main.appendChild(blk);
   });
 
-  // Wire up events
   main.querySelectorAll('[data-vote]').forEach(b=>b.addEventListener('click',()=>toggleVote(b.dataset.vote)));
   main.querySelectorAll('[data-heart]').forEach(b=>b.addEventListener('click',()=>toggleHeart(b.dataset.heart)));
   main.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>openEdit(b.dataset.edit)));
@@ -1107,14 +1678,540 @@ function buildSetlists(){
     const tr=allTracks().find(t=>t.id===b.dataset.part);
     if(tr) openPart(tr);
   }));
+  main.querySelectorAll('[data-genre-change]').forEach(sel=>{
+    sel.addEventListener('change', e => changeTrackGenre(sel.dataset.genreChange, e.target.value));
+    sel.addEventListener('click', e => e.stopPropagation());
+  });
 }
+
+// ── CONCERTS VIEW ────────────────────────────────────────────
+function fmtConcertDate(d){
+  if(!d) return '';
+  try{
+    return new Date(d+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }catch(e){ return d; }
+}
+
+function buildConcerts(){
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+  const adminUser = isAdmin();
+
+  // Header with "New concert" button for admins
+  const head = document.createElement('div');
+  head.className = 'concert-head';
+  head.innerHTML = '<div><h2>Concerts</h2><p>Les setlists spécifiques à chaque date — réservées aux admins</p></div>';
+  if(adminUser){
+    const btn = document.createElement('button');
+    btn.className = 'btn pri';
+    btn.style.flex = 'none';
+    btn.textContent = '+ Nouveau concert';
+    btn.addEventListener('click', () => openConcertModal());
+    head.appendChild(btn);
+  }
+  main.appendChild(head);
+
+  const concerts = Object.values(fbConcerts).sort((a,b)=>{
+    // Upcoming dates first (asc), undated last
+    const ad = a.date||'9999', bd = b.date||'9999';
+    return ad.localeCompare(bd);
+  });
+
+  if(!concerts.length){
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = adminUser
+      ? 'Aucun concert pour l\'instant.<br>Crée le premier avec le bouton ci-dessus !'
+      : 'Aucun concert pour l\'instant.<br><span style="font-size:12px">Seuls les admins peuvent en créer.</span>';
+    main.appendChild(empty);
+    return;
+  }
+
+  concerts.forEach(c => {
+    const trackIds = (c.trackIds||[]).filter(Boolean);
+    const tracks = trackIds.map(id => allTracks().find(t => t.id === id)).filter(Boolean);
+    const total = tracks.reduce((a,tr)=>a+pd(tr.d),0);
+    const card = document.createElement('div');
+    card.className = 'ccard';
+    const dateTxt = c.date ? fmtConcertDate(c.date) : 'Date non définie';
+    card.innerHTML =
+      '<div class="ccard-top">'
+        +'<div style="min-width:0">'
+          +'<div class="ccard-name">'+esc(c.name)+'</div>'
+          +'<div class="ccard-meta">'+esc(dateTxt)+(c.venue?' · '+esc(c.venue):'')+'</div>'
+        +'</div>'
+        +'<div class="ccard-top-actions">'
+          +(c.date?'<span class="ccard-date">'+esc(c.date)+'</span>':'')
+          +(adminUser?'<button class="ccard-del" data-cdel="'+c.id+'" title="Supprimer ce concert">🗑️</button>':'')
+        +'</div>'
+      +'</div>'
+      +'<div class="ccard-stats">'
+        +'<span><strong>'+tracks.length+'</strong> titre'+(tracks.length>1?'s':'')+'</span>'
+        +'<span>Durée : <strong>'+(tracks.length?fl(total):'—')+'</strong></span>'
+        +(c.createdBy?'<span style="margin-left:auto">Créé par '+esc(c.createdBy)+'</span>':'')
+      +'</div>'
+      +'<div class="ccard-actions">'
+        +'<button class="btn" data-view="'+c.id+'">Ouvrir →</button>'
+      +'</div>';
+    main.appendChild(card);
+  });
+
+  main.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => openConcertDetail(b.dataset.view)));
+  main.querySelectorAll('[data-cdel]').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteConcertById(b.dataset.cdel);
+  }));
+}
+
+// ── CONCERT MODAL (create/edit) ──────────────────────────────
+function openConcertModal(concertId){
+  if(!isAdmin()){ alert('Seuls les admins peuvent créer ou modifier des concerts.'); return; }
+  curConcertEditId = concertId || null;
+  const c = concertId ? fbConcerts[concertId] : null;
+  document.getElementById('concert-modal-title').textContent = c ? 'Modifier le concert' : 'Nouveau concert';
+  document.getElementById('c-name').value  = c?c.name:'';
+  document.getElementById('c-date').value  = c?(c.date||''):'';
+  document.getElementById('c-venue').value = c?(c.venue||''):'';
+  document.getElementById('c-err').style.display = 'none';
+  document.getElementById('concert-ov').style.display = 'flex';
+  setTimeout(() => document.getElementById('c-name').focus(), 100);
+}
+window.openConcertModal = openConcertModal;
+window.openEditConcert = function(){ openConcertModal(curConcertViewId); };
+
+window.closeConcertModal = function(){ document.getElementById('concert-ov').style.display='none'; curConcertEditId=null; };
+
+document.getElementById('concert-ov').addEventListener('click', e => {
+  if(e.target === document.getElementById('concert-ov')) closeConcertModal();
+});
+
+window.saveConcert = async function(){
+  if(!isAdmin()){ alert('Seuls les admins peuvent enregistrer un concert.'); return; }
+  const name = document.getElementById('c-name').value.trim();
+  if(!name){ document.getElementById('c-err').style.display='block'; return; }
+  document.getElementById('c-err').style.display='none';
+  const date  = document.getElementById('c-date').value.trim()||null;
+  const venue = document.getElementById('c-venue').value.trim()||null;
+
+  if(curConcertEditId && fbConcerts[curConcertEditId]){
+    const existing = fbConcerts[curConcertEditId];
+    await set(ref(db,'concerts/'+curConcertEditId), {
+      ...existing,
+      name, date, venue,
+      updatedBy: me.name, updatedAt: Date.now()
+    });
+  } else {
+    const id = 'concert_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+    await set(ref(db,'concerts/'+id), {
+      id, name, date, venue,
+      trackIds: [],
+      createdBy: me.name, createdAt: Date.now(),
+      updatedBy: me.name, updatedAt: Date.now()
+    });
+    curConcertViewId = id;
+  }
+  closeConcertModal();
+  // If we were editing from the detail view, keep it open with fresh data
+  if(curConcertViewId) {
+    setTimeout(()=>openConcertDetail(curConcertViewId), 100);
+  } else {
+    curTab = 'concerts';
+    rebuild();
+  }
+};
+
+// ── CONCERT DETAIL ───────────────────────────────────────────
+function openConcertDetail(id){
+  curConcertViewId = id;
+  renderConcertDetail();
+  document.getElementById('cdetail-ov').style.display = 'flex';
+}
+window.openConcertDetail = openConcertDetail;
+
+window.closeCdetail = function(){
+  document.getElementById('cdetail-ov').style.display='none';
+  curConcertViewId=null;
+};
+
+document.getElementById('cdetail-ov').addEventListener('click', e => {
+  if(e.target === document.getElementById('cdetail-ov')) closeCdetail();
+});
+
+function renderConcertDetail(){
+  const c = fbConcerts[curConcertViewId];
+  if(!c){ closeCdetail(); return; }
+  const adminUser = isAdmin();
+  document.getElementById('cd-name').textContent = c.name;
+  const metaParts = [];
+  if(c.date) metaParts.push(fmtConcertDate(c.date));
+  if(c.venue) metaParts.push(c.venue);
+  document.getElementById('cd-meta').textContent = metaParts.join(' · ') || 'Aucune date/lieu';
+
+  // Hide admin buttons if not admin
+  document.getElementById('cd-add-btn').style.display = adminUser ? '' : 'none';
+  document.getElementById('cd-edit-btn').style.display = adminUser ? '' : 'none';
+  document.getElementById('cd-del-btn').style.display = adminUser ? '' : 'none';
+
+  const trackIds = (c.trackIds||[]).filter(Boolean);
+  const tracks = trackIds.map(id => allTracks().find(t => t.id === id));
+  const wrap = document.getElementById('cd-tracks');
+  if(!trackIds.length){
+    wrap.innerHTML = '<div class="cd-empty">Aucun titre dans ce concert.'+(adminUser?'<br><br><button class="btn pri" style="flex:none" onclick="openTrackPicker()">+ Ajouter des titres</button>':'')+'</div>';
+    return;
+  }
+  const list = document.createElement('div');
+  list.className = 'cd-list';
+  list.id = 'cd-sortable-list';
+  tracks.forEach((tr,i) => {
+    const el = document.createElement('div');
+    el.className = 'cd-item';
+    el.dataset.idx = i;
+    const dragHandle = adminUser ? '<span class="cd-drag" title="Glisser pour réordonner">⋮⋮</span>' : '<span></span>';
+    const numCell = adminUser
+      ? '<input type="number" class="cd-num-input" value="'+(i+1)+'" min="1" max="'+trackIds.length+'" data-idx="'+i+'" title="Tape un numéro pour déplacer">'
+      : '<span style="font-family:\'DM Serif Display\',serif;font-size:1.1rem;text-align:center">'+(i+1)+'</span>';
+    const rmBtn = adminUser ? '<button class="cd-rm" data-rm="'+i+'" title="Retirer">✕</button>' : '<span></span>';
+    if(!tr){
+      el.innerHTML = dragHandle + numCell + '<div class="cd-info"><div class="cd-tt" style="color:var(--faint);font-style:italic">Titre supprimé</div></div><span></span><span></span>' + rmBtn;
+    } else {
+      const sty = STYLES[tr.s]||STYLES.pop;
+      el.innerHTML =
+        dragHandle
+        + numCell
+        +'<div class="cd-info">'
+          +'<div class="cd-tt">'+esc(tr.t)+'</div>'
+          +'<div class="cd-ta">'+esc(tr.a)+'</div>'
+        +'</div>'
+        +'<span class="cd-dur">'+esc(tr.d||'?')+'</span>'
+        +'<span class="pill" style="background:'+sty.bg+';color:'+sty.tc+'">'+sty.label+'</span>'
+        +rmBtn;
+    }
+    list.appendChild(el);
+  });
+  wrap.innerHTML = '';
+  wrap.appendChild(list);
+  const total = tracks.filter(Boolean).reduce((a,tr)=>a+pd(tr.d),0);
+  const footer = document.createElement('div');
+  footer.className = 'cd-total';
+  footer.innerHTML = '<span>'+trackIds.length+' titre'+(trackIds.length>1?'s':'')+'</span><span>Durée totale : <strong>'+fl(total)+'</strong></span>';
+  wrap.appendChild(footer);
+
+  if(adminUser){
+    // Remove button
+    list.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>removeTrackFromConcert(+b.dataset.rm)));
+    // Number input : move to typed position
+    list.querySelectorAll('.cd-num-input').forEach(inp => {
+      const commit = () => {
+        const oldIdx = +inp.dataset.idx;
+        let newPos = parseInt(inp.value, 10);
+        if(isNaN(newPos) || newPos < 1){ inp.value = oldIdx + 1; return; }
+        newPos = Math.min(Math.max(newPos, 1), trackIds.length);
+        const newIdx = newPos - 1;
+        if(newIdx === oldIdx){ inp.value = oldIdx + 1; return; }
+        moveTrackTo(oldIdx, newIdx);
+      };
+      inp.addEventListener('blur', commit);
+      inp.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); }
+        if(e.key === 'Escape'){ inp.value = (+inp.dataset.idx) + 1; inp.blur(); }
+      });
+      // Select all on focus for fast replacement
+      inp.addEventListener('focus', () => setTimeout(()=>inp.select(), 0));
+    });
+    // Drag & drop with Sortable.js
+    if(window.Sortable){
+      Sortable.create(list, {
+        handle: '.cd-drag',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        delayOnTouchOnly: true,
+        delay: 150,
+        onEnd: (evt) => {
+          if(evt.oldIndex === evt.newIndex) return;
+          moveTrackTo(evt.oldIndex, evt.newIndex);
+        }
+      });
+    }
+  }
+}
+
+async function moveTrackTo(oldIdx, newIdx){
+  if(!isAdmin()) return;
+  const c = fbConcerts[curConcertViewId];
+  if(!c) return;
+  const ids = (c.trackIds||[]).filter(Boolean).slice();
+  if(oldIdx < 0 || oldIdx >= ids.length) return;
+  const clampedNew = Math.max(0, Math.min(newIdx, ids.length - 1));
+  const [moved] = ids.splice(oldIdx, 1);
+  ids.splice(clampedNew, 0, moved);
+  await set(ref(db,'concerts/'+curConcertViewId+'/trackIds'), ids);
+  await set(ref(db,'concerts/'+curConcertViewId+'/updatedBy'), me.name);
+  await set(ref(db,'concerts/'+curConcertViewId+'/updatedAt'), Date.now());
+}
+
+async function removeTrackFromConcert(idx){
+  if(!isAdmin()) return;
+  const c = fbConcerts[curConcertViewId];
+  if(!c) return;
+  const ids = (c.trackIds||[]).filter(Boolean).slice();
+  ids.splice(idx,1);
+  await set(ref(db,'concerts/'+curConcertViewId+'/trackIds'), ids);
+  await set(ref(db,'concerts/'+curConcertViewId+'/updatedBy'), me.name);
+  await set(ref(db,'concerts/'+curConcertViewId+'/updatedAt'), Date.now());
+}
+
+async function deleteConcertById(concertId){
+  if(!isAdmin()) return;
+  const c = fbConcerts[concertId];
+  if(!c) return;
+  if(!confirm('Supprimer définitivement le concert "'+c.name+'" ?\n\nCette action est irréversible.')) return;
+  await remove(ref(db,'concerts/'+concertId));
+  // If we were viewing it, close the detail view
+  if(curConcertViewId === concertId){
+    closeCdetail();
+  }
+  curTab = 'concerts';
+  rebuild();
+}
+window.deleteConcertById = deleteConcertById;
+
+window.deleteConcert = function(){
+  if(!curConcertViewId) return;
+  deleteConcertById(curConcertViewId);
+};
+
+// ── TRACK PICKER ─────────────────────────────────────────────
+window.openTrackPicker = function(){
+  if(!isAdmin()){ alert('Seuls les admins peuvent modifier un concert.'); return; }
+  pickerSelection = new Set();
+  pickerStyleFilter = 'all';
+  pickerSearchQuery = '';
+  document.getElementById('picker-search').value = '';
+  renderPickerFilters();
+  renderPickerList();
+  document.getElementById('picker-ov').style.display = 'flex';
+  setTimeout(() => document.getElementById('picker-search').focus(), 100);
+};
+
+window.closePicker = function(){ document.getElementById('picker-ov').style.display='none'; };
+
+document.getElementById('picker-ov').addEventListener('click', e => {
+  if(e.target === document.getElementById('picker-ov')) closePicker();
+});
+
+document.getElementById('picker-search').addEventListener('input', (e) => {
+  pickerSearchQuery = e.target.value.trim().toLowerCase();
+  renderPickerList();
+});
+
+function renderPickerFilters(){
+  const el = document.getElementById('picker-filters');
+  el.innerHTML = '';
+  [{id:'all',label:'Tous'}, ...Object.entries(STYLES).map(([id,s])=>({id,label:s.label}))].forEach(f=>{
+    const btn = document.createElement('button');
+    btn.className = 'fb'+(pickerStyleFilter===f.id?' on':'');
+    btn.textContent = f.label;
+    btn.addEventListener('click', ()=>{
+      pickerStyleFilter = f.id;
+      renderPickerFilters();
+      renderPickerList();
+    });
+    el.appendChild(btn);
+  });
+}
+
+function renderPickerList(){
+  const el = document.getElementById('picker-list');
+  const countEl = document.getElementById('picker-count');
+  const c = fbConcerts[curConcertViewId];
+  const existing = new Set((c?.trackIds||[]).filter(Boolean));
+  let tracks = allTracks().filter(tr=>!isExcl(tr));
+  if(pickerStyleFilter!=='all') tracks = tracks.filter(tr=>tr.s===pickerStyleFilter);
+  if(pickerSearchQuery){
+    const q = pickerSearchQuery;
+    tracks = tracks.filter(tr => (tr.t||'').toLowerCase().includes(q) || (tr.a||'').toLowerCase().includes(q));
+  }
+  tracks.sort((a,b)=>(a.t||'').localeCompare(b.t||''));
+
+  if(!tracks.length){
+    el.innerHTML = '<div class="picker-empty">Aucun titre ne correspond à ta recherche.</div>';
+  } else {
+    el.innerHTML = '';
+    tracks.forEach(tr=>{
+      const already = existing.has(tr.id);
+      const selected = pickerSelection.has(tr.id);
+      const sty = STYLES[tr.s]||STYLES.pop;
+      const row = document.createElement('label');
+      row.className = 'picker-item'+(selected?' sel':'')+(already?' already':'');
+      row.innerHTML =
+        '<input type="checkbox" '+(selected?'checked':'')+(already?' disabled':'')+'>'
+        +'<div class="picker-item-info">'
+          +'<div class="picker-item-t">'+esc(tr.t)+(already?' <span style="color:var(--faint);font-size:11px">(déjà dans la setlist)</span>':'')+'</div>'
+          +'<div class="picker-item-a">'+esc(tr.a)+'</div>'
+        +'</div>'
+        +'<span class="pill" style="background:'+sty.bg+';color:'+sty.tc+'">'+sty.label+'</span>'
+        +'<span class="picker-item-d">'+esc(tr.d||'?')+'</span>';
+      row.querySelector('input').addEventListener('change', (e) => {
+        if(already) return;
+        if(e.target.checked){ pickerSelection.add(tr.id); row.classList.add('sel'); }
+        else { pickerSelection.delete(tr.id); row.classList.remove('sel'); }
+        updatePickerCount();
+      });
+      el.appendChild(row);
+    });
+  }
+  updatePickerCount();
+}
+
+function updatePickerCount(){
+  document.getElementById('picker-count').textContent =
+    pickerSelection.size+' titre'+(pickerSelection.size>1?'s':'')+' sélectionné'+(pickerSelection.size>1?'s':'');
+}
+
+window.addPickedTracks = async function(){
+  if(!isAdmin()) return;
+  if(!pickerSelection.size){ closePicker(); return; }
+  const c = fbConcerts[curConcertViewId];
+  if(!c) return;
+  const existing = (c.trackIds||[]).filter(Boolean);
+  const toAdd = [...pickerSelection].filter(id => !existing.includes(id));
+  const newIds = [...existing, ...toAdd];
+  await set(ref(db,'concerts/'+curConcertViewId+'/trackIds'), newIds);
+  await set(ref(db,'concerts/'+curConcertViewId+'/updatedBy'), me.name);
+  await set(ref(db,'concerts/'+curConcertViewId+'/updatedAt'), Date.now());
+  pickerSelection.clear();
+  closePicker();
+};
+
+// ── PDF EXPORT : CONCERT ─────────────────────────────────────
+window.exportConcertPDF = function(){
+  if(!curConcertViewId || !window.jspdf){ alert('Impossible de générer le PDF (librairie non chargée)'); return; }
+  const c = fbConcerts[curConcertViewId];
+  if(!c) return;
+  const trackIds = (c.trackIds||[]).filter(Boolean);
+  const tracks = trackIds.map(id => allTracks().find(t => t.id === id)).filter(Boolean);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'mm',format:'a4'});
+  const pageW = 210, pageH = 297, margin = 18, maxW = pageW - 2*margin;
+  let y = 25;
+
+  // Top band
+  doc.setFillColor(26,23,20);
+  doc.rect(0, 0, pageW, 3, 'F');
+
+  // Eyebrow
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.setTextColor(160,155,150);
+  doc.text('SETLIST DE CONCERT · LA SAUCE', margin, y);
+  y += 7;
+  // Name
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(26);
+  doc.setTextColor(26,23,20);
+  const nameLines = doc.splitTextToSize(c.name, maxW);
+  nameLines.forEach(ln => { doc.text(ln, margin, y); y += 10; });
+  // Date & venue
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(12);
+  doc.setTextColor(107,101,96);
+  const dateTxt = c.date ? fmtConcertDate(c.date) : '';
+  const sub = [dateTxt, c.venue].filter(Boolean).join(' · ');
+  if(sub){ doc.text(sub, margin, y); y += 7; }
+  // Stats
+  const total = tracks.reduce((a,tr)=>a+pd(tr.d),0);
+  doc.setFontSize(10);
+  doc.setTextColor(107,101,96);
+  doc.text(tracks.length+' titre'+(tracks.length>1?'s':'')+'  ·  Durée estimée : '+fl(total), margin, y);
+  y += 4;
+  // Divider
+  doc.setDrawColor(26,23,20);
+  doc.setLineWidth(0.6);
+  doc.line(margin, y, pageW-margin, y);
+  y += 10;
+
+  function ensureSpace(needed){
+    if(y + needed > pageH - 18){
+      doc.addPage();
+      y = 25;
+    }
+  }
+
+  tracks.forEach((tr,i) => {
+    ensureSpace(16);
+    const num = String(i+1).padStart(2,'0');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(16);
+    doc.setTextColor(184,179,174);
+    doc.text(num, margin, y);
+    doc.setFontSize(12);
+    doc.setTextColor(26,23,20);
+    const titleLines = doc.splitTextToSize(tr.t, maxW - 26);
+    doc.text(titleLines[0], margin+14, y);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10);
+    doc.setTextColor(107,101,96);
+    doc.text(tr.d||'?', pageW-margin, y, {align:'right'});
+    y += 5;
+    doc.setFontSize(10);
+    doc.setTextColor(107,101,96);
+    const artistLines = doc.splitTextToSize(tr.a, maxW - 14);
+    doc.text(artistLines[0], margin+14, y);
+    const styleLabel = STYLES[tr.s]?STYLES[tr.s].label:tr.s;
+    doc.setFontSize(8);
+    doc.setTextColor(160,155,150);
+    doc.text(styleLabel, pageW-margin, y, {align:'right'});
+    y += 3;
+    // Thin divider
+    doc.setDrawColor(232,226,218);
+    doc.setLineWidth(0.2);
+    doc.line(margin+14, y, pageW-margin, y);
+    y += 5;
+  });
+
+  // Total at bottom
+  ensureSpace(20);
+  y += 3;
+  doc.setDrawColor(26,23,20);
+  doc.setLineWidth(0.6);
+  doc.line(margin, y, pageW-margin, y);
+  y += 7;
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.setTextColor(26,23,20);
+  doc.text('DURÉE TOTALE', margin, y);
+  doc.text(fl(total), pageW-margin, y, {align:'right'});
+
+  // Footer
+  const pages = doc.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8);
+    doc.setTextColor(184,179,174);
+    doc.text('Setlists — La Sauce 🎵 · Exporté le '+new Date().toLocaleDateString('fr-FR'), margin, pageH-10);
+    doc.text(i+' / '+pages, pageW-margin, pageH-10, {align:'right'});
+  }
+
+  const fname = 'concert_'+sanitizeFilename(c.name)+(c.date?'_'+c.date:'')+'.pdf';
+  doc.save(fname);
+};
 
 // ── REBUILD ───────────────────────────────────────────────────
 function rebuild(){
+  renderLegend();
   buildTabs();
   buildFilters();
   buildStats();
-  if(curTab==='new') buildNew(); else buildSetlists();
+  if(curTab==='new') buildNew();
+  else if(curTab==='concerts') buildConcerts();
+  else buildSetlists();
+  // If concert detail is open, refresh it
+  if(curConcertViewId && document.getElementById('cdetail-ov').style.display==='flex'){
+    renderConcertDetail();
+  }
 }
 
 // ── FIREBASE LISTENERS ────────────────────────────────────────
@@ -1122,30 +2219,55 @@ const syncEl = document.getElementById('sync');
 onValue(ref(db,'votes'),      snap=>{ fbVotes   = snap.val()||{}; syncEl.className='sync ok'; rebuild(); }, ()=>{ syncEl.className='sync err'; });
 onValue(ref(db,'custom'),     snap=>{ fbCustom  = snap.val()||{}; rebuild(); });
 onValue(ref(db,'members'),    snap=>{ fbMembers = snap.val()||{}; rebuild(); });
-onValue(ref(db,'partitions'), snap=>{ fbParts   = snap.val()||{}; rebuild(); });
-onValue(ref(db,'hearts'),     snap=>{ fbHearts   = snap.val()||{}; rebuild(); });
+onValue(ref(db,'partitions'), snap=>{
+  fbParts = snap.val()||{};
+  rebuild();
+  // Refresh audio section if partition modal is open
+  if(curPartId && document.getElementById('part-ov').style.display==='flex'){
+    renderAudioSection();
+  }
+});
+onValue(ref(db,'hearts'),     snap=>{ fbHearts  = snap.val()||{}; rebuild(); });
 onValue(ref(db,'overrides'),  snap=>{ fbOverrides = snap.val()||{}; rebuild(); });
+onValue(ref(db,'concerts'),   snap=>{ fbConcerts = snap.val()||{}; rebuild(); });
+onValue(ref(db,'styles'),     snap=>{
+  fbStyles = snap.val()||{};
+  // Ensure each has bg/tc (auto-derive if missing)
+  Object.keys(fbStyles).forEach(k => {
+    const s = fbStyles[k];
+    if(s && s.color){
+      if(!s.bg) s.bg = mixWithWhite(s.color, 0.85);
+      if(!s.tc) s.tc = mixWithBlack(s.color, 0.6);
+    }
+  });
+  STYLES = {...BUILTIN_STYLES, ...fbStyles};
+  rebuild();
+});
 
 // ── ESC ───────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if(e.key!=='Escape') return;
-  document.getElementById('mo-ov').style.display   = 'none';
-  document.getElementById('add-ov').style.display  = 'none';
-  document.getElementById('edit-ov').style.display = 'none';
-  document.getElementById('part-ov').style.display = 'none';
+  ['mo-ov','add-ov','edit-ov','part-ov','concert-ov','cdetail-ov','picker-ov','genre-ov'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = 'none';
+  });
 });
 
 // ── LEGEND ───────────────────────────────────────────────────
-document.getElementById('legend').innerHTML = Object.entries(STYLES).map(([,s])=>
-  '<div class="leg"><div class="leg-dot" style="background:'+s.color+'"></div>'+s.label+'</div>'
-).join('');
+function renderLegend(){
+  const el = document.getElementById('legend');
+  if(!el) return;
+  el.innerHTML = Object.entries(STYLES).map(([,s])=>
+    '<div class="leg"><div class="leg-dot" style="background:'+s.color+'"></div>'+esc(s.label)+'</div>'
+  ).join('');
+}
 
 // ── INIT ─────────────────────────────────────────────────────
 me = loadMe();
 if(me){
   document.getElementById('idbar').style.display = 'flex';
   document.getElementById('idbadge').innerHTML =
-    '<div class="av" style="background:'+me.color+'">'+me.initials+'</div>'+me.name;
+    '<div class="av" style="background:'+me.color+'">'+me.initials+'</div>'+esc(me.name);
   rebuild();
 } else {
   openMo();
